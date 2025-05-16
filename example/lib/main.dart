@@ -1,5 +1,3 @@
-// File: example/lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_welcome_kit/flutter_welcome_kit.dart';
 
@@ -9,12 +7,11 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Welcome Kit Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      title: 'Welcome',
+      theme: ThemeData(primarySwatch: Colors.deepPurple),
       home: const HomePage(),
     );
   }
@@ -22,14 +19,16 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final GlobalKey _buttonKey = GlobalKey();
+  final GlobalKey _logoKey = GlobalKey();
   final GlobalKey _textKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _settingsKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
 
   late TourController _controller;
 
@@ -41,15 +40,41 @@ class _HomePageState extends State<HomePage> {
         context: context,
         steps: [
           TourStep(
-            key: _textKey,
-            title: "Welcome!",
-            description: "This is an introductory message.",
+            key: _logoKey,
+            title: "Welcome to Flutter Tour!",
+            description: "This app uses an interactive onboarding tour.",
+            arrowAlignment: ArrowAlignment(ArrowPosition.top, ArrowDirection.up),
+            backgroundColor: Colors.deepPurple.shade100,
           ),
           TourStep(
-            key: _buttonKey,
-            title: "Start Button",
-            description: "Click this button to begin your journey.",
-            alignment: TourAlignment.top,
+            key: _textKey,
+            title: "Helpful Text",
+            description: "Here’s some info users should notice.",
+            arrowAlignment: ArrowAlignment(ArrowPosition.top, ArrowDirection.up),
+            backgroundColor: Colors.orange.shade100,
+          ),
+          TourStep(
+            key: _searchKey,
+            title: "Search Button",
+            description: "Tap here to search through the app.",
+            arrowAlignment: ArrowAlignment(ArrowPosition.top, ArrowDirection.up),
+            backgroundColor: Colors.green.shade100,
+          ),
+          TourStep(
+            key: _settingsKey,
+            title: "Settings",
+            description: "Customize your experience here.",
+            arrowAlignment: ArrowAlignment(ArrowPosition.top, ArrowDirection.up),
+            backgroundColor: Colors.red.shade100,
+          ),
+          TourStep(
+            key: _fabKey,
+            title: "Quick Action",
+            description: "Use this button for quick actions.",
+            arrowAlignment: ArrowAlignment(ArrowPosition.bottom, ArrowDirection.down),
+            backgroundColor: Colors.blue.shade100,
+            isLast: true,
+            buttonLabel: "Got it!",
           ),
         ],
       );
@@ -59,20 +84,46 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome Kit Example')),
-      body: Center(
+      appBar: AppBar(
+        title: const Text('Welcome Kit Example'),
+        actions: [
+          IconButton(
+            key: _searchKey,
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+          IconButton(
+            key: _settingsKey,
+            icon: const Icon(Icons.settings),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Hello there!", key: _textKey),
-            const SizedBox(height: 20),
+            FlutterLogo(size: 80, key: _logoKey),
+            const SizedBox(height: 24),
+            Text(
+              "Welcome to the guided tour demo!",
+              key: _textKey,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
             ElevatedButton(
-              key: _buttonKey,
               onPressed: () => _controller.start(),
-              child: const Text("Show Tour"),
+              child: const Text("Start Tour"),
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        key: _fabKey,
+        onPressed: () {},
+        child: const Icon(Icons.add),
       ),
     );
   }

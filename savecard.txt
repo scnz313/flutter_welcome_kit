@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_welcome_kit/core/tour_step.dart';
 
-
 class TooltipCard extends StatefulWidget {
   final TourStep step;
   final Rect targetRect;
@@ -33,6 +32,7 @@ class _TooltipCardState extends State<TooltipCard>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -50,11 +50,14 @@ class _TooltipCardState extends State<TooltipCard>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
     _controller.forward();
+
+    // Auto advance after duration (if not last step)
     Future.delayed(widget.step.duration, () {
       if (mounted && !widget.step.isLast) {
         widget.onNext();
@@ -78,6 +81,7 @@ class _TooltipCardState extends State<TooltipCard>
     if (dy + 200 > screenSize.height) {
       dy = widget.targetRect.top - 180;
     }
+
     if (widget.targetRect.left < screenSize.width / 2) {
       dx = horizontalPadding;
     } else {
@@ -90,6 +94,14 @@ class _TooltipCardState extends State<TooltipCard>
     );
   }
 
+  bool get _isArrowOnTop => widget.step.alignment == TourAlignment.top;
+
+  bool get _isArrowOnBottom => widget.step.alignment == TourAlignment.bottom;
+
+  bool get _isArrowOnLeft => widget.step.alignment == TourAlignment.left;
+
+  bool get _isArrowOnRight => widget.step.alignment == TourAlignment.right;
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -97,15 +109,12 @@ class _TooltipCardState extends State<TooltipCard>
     final targetCenterX = widget.targetRect.center.dx;
     final buttonLabel =
         widget.step.buttonLabel ?? (widget.step.isLast ? "Close" : "Next");
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = widget.step.backgroundColor != Colors.white
         ? widget.step.backgroundColor
         : (isDark ? Colors.grey[850]! : Colors.white);
     final textColor = isDark ? Colors.white : Colors.black87;
-
-    final arrowPos = widget.step.arrowAlignment?.position;
-    final arrowDir = widget.step.arrowAlignment?.direction;
-    
 
     return Stack(
       children: [
@@ -128,12 +137,15 @@ class _TooltipCardState extends State<TooltipCard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (arrowPos == ArrowPosition.top)
-                    _buildArrow(targetCenterX - position.dx, arrowDir!),
-                  if (arrowPos == ArrowPosition.left)
-                    _buildArrow(16, arrowDir!),
-                  if (arrowPos == ArrowPosition.right)
-                    _buildArrow(260, arrowDir!),
+                  if (_isArrowOnTop)
+                    _buildArrow(
+                      targetCenterX - position.dx,
+                      AxisDirection.down,
+                    ),
+                  if (_isArrowOnBottom)
+                    _buildArrow(targetCenterX - position.dx, AxisDirection.up),
+                  if (_isArrowOnLeft) _buildArrow(16, AxisDirection.right),
+                  if (_isArrowOnRight) _buildArrow(260, AxisDirection.left),
                   Material(
                     color: Colors.transparent,
                     child: Container(
@@ -203,8 +215,15 @@ class _TooltipCardState extends State<TooltipCard>
                       ),
                     ),
                   ),
-                  if (arrowPos == ArrowPosition.bottom)
-                    _buildArrow(targetCenterX - position.dx, arrowDir! as ArrowDirection),
+                  /*if (_isArrowOnTop)
+                    _buildArrow(
+                      targetCenterX - position.dx,
+                      AxisDirection.down,
+                    ),
+                  if (_isArrowOnBottom)
+                    _buildArrow(targetCenterX - position.dx, AxisDirection.up),
+                  if (_isArrowOnLeft) _buildArrow(16, AxisDirection.right),
+                  if (_isArrowOnRight) _buildArrow(260, AxisDirection.left),*/
                 ],
               ),
             ),
@@ -214,7 +233,7 @@ class _TooltipCardState extends State<TooltipCard>
     );
   }
 
-  Widget _buildArrow(double offsetX, ArrowDirection direction) {
+  Widget _buildArrow(double offsetX, AxisDirection direction) {
     return Padding(
       padding: EdgeInsets.only(left: offsetX.clamp(10, 250)),
       child: ScaleTransition(
@@ -233,30 +252,29 @@ class _TooltipCardState extends State<TooltipCard>
 
 class _ArrowPainter extends CustomPainter {
   final Color color;
-  final ArrowDirection direction;
-
+  final AxisDirection direction;
   _ArrowPainter({required this.color, required this.direction});
 
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path();
     switch (direction) {
-      case ArrowDirection.up:
+      case AxisDirection.up:
         path.moveTo(0, size.height);
         path.lineTo(size.width / 2, 0);
         path.lineTo(size.width, size.height);
         break;
-      case ArrowDirection.down:
+      case AxisDirection.down:
         path.moveTo(0, 0);
         path.lineTo(size.width / 2, size.height);
         path.lineTo(size.width, 0);
         break;
-      case ArrowDirection.left:
+      case AxisDirection.left:
         path.moveTo(size.width, 0);
         path.lineTo(0, size.height / 2);
         path.lineTo(size.width, size.height);
         break;
-      case ArrowDirection.right:
+      case AxisDirection.right:
         path.moveTo(0, 0);
         path.lineTo(size.width, size.height / 2);
         path.lineTo(0, size.height);
@@ -270,6 +288,3 @@ class _ArrowPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
-
-
-
