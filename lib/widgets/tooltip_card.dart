@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_welcome_kit/core/tour_step.dart';
 
+enum ArrowDirection { up, down, left, right }
 
 class TooltipCard extends StatefulWidget {
   final TourStep step;
@@ -25,10 +26,8 @@ class TooltipCard extends StatefulWidget {
 class _TooltipCardState extends State<TooltipCard>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late AnimationController _pulseController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -42,17 +41,9 @@ class _TooltipCardState extends State<TooltipCard>
       curve: Curves.easeInOut,
     );
     _scaleAnimation = Tween<double>(
-      begin: 0.9,
+      begin: 0.95,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.decelerate));
-
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
 
     _controller.forward();
     Future.delayed(widget.step.duration, () {
@@ -65,7 +56,6 @@ class _TooltipCardState extends State<TooltipCard>
   @override
   void dispose() {
     _controller.dispose();
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -90,10 +80,71 @@ class _TooltipCardState extends State<TooltipCard>
     );
   }
 
+  (ArrowDirection, Offset) _calculateArrowPlacement(
+    Size screenSize,
+    Offset position,
+  ) {
+    final targetCenter = widget.targetRect.center;
+    final cardRect = Rect.fromLTWH(position.dx, position.dy, 280, 160);
+
+    // Calculate the relative position of target to card
+    final isTargetAbove = targetCenter.dy < cardRect.top;
+    final isTargetBelow = targetCenter.dy > cardRect.bottom;
+    final isTargetLeft = targetCenter.dx < cardRect.left;
+    final isTargetRight = targetCenter.dx > cardRect.right;
+
+    // Determine arrow direction
+    ArrowDirection direction;
+    if (isTargetAbove && !isTargetLeft && !isTargetRight) {
+      direction = ArrowDirection.up;
+    } else if (isTargetBelow && !isTargetLeft && !isTargetRight) {
+      direction = ArrowDirection.down;
+    } else if (isTargetLeft) {
+      direction = ArrowDirection.left;
+    } else {
+      direction = ArrowDirection.right;
+    }
+
+    // Update arrow position calculations
+    Offset arrowOffset;
+    switch (direction) {
+      case ArrowDirection.up:
+        arrowOffset = Offset(
+          (targetCenter.dx - position.dx).clamp(20.0, 260.0),
+          -8, // Move arrow slightly above card
+        );
+        break;
+      case ArrowDirection.down:
+        arrowOffset = Offset(
+          (targetCenter.dx - position.dx).clamp(20.0, 260.0),
+          158, // Position just below card bottom
+        );
+        break;
+      case ArrowDirection.left:
+        arrowOffset = Offset(
+          -8, // Move arrow slightly left of card
+          (targetCenter.dy - position.dy).clamp(20.0, 140.0),
+        );
+        break;
+      case ArrowDirection.right:
+        arrowOffset = Offset(
+          278, // Position just right of card
+          (targetCenter.dy - position.dy).clamp(20.0, 140.0),
+        );
+        break;
+    }
+
+    return (direction, arrowOffset);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final position = _calculatePosition(screenSize);
+    final (arrowDir, arrowOffset) = _calculateArrowPlacement(
+      screenSize,
+      position,
+    );
     final targetCenterX = widget.targetRect.center.dx;
     final buttonLabel =
         widget.step.buttonLabel ?? (widget.step.isLast ? "Close" : "Next");
@@ -102,10 +153,6 @@ class _TooltipCardState extends State<TooltipCard>
         ? widget.step.backgroundColor
         : (isDark ? Colors.grey[850]! : Colors.white);
     final textColor = isDark ? Colors.white : Colors.black87;
-
-    final arrowPos = widget.step.arrowAlignment?.position;
-    final arrowDir = widget.step.arrowAlignment?.direction;
-    
 
     return Stack(
       children: [
@@ -125,15 +172,11 @@ class _TooltipCardState extends State<TooltipCard>
             opacity: _fadeAnimation,
             child: ScaleTransition(
               scale: _scaleAnimation,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
+                clipBehavior:
+                    Clip.none, // Important: Allow arrow to render outside card
                 children: [
-                  if (arrowPos == ArrowPosition.top)
-                    _buildArrow(targetCenterX - position.dx, arrowDir!),
-                  if (arrowPos == ArrowPosition.left)
-                    _buildArrow(16, arrowDir!),
-                  if (arrowPos == ArrowPosition.right)
-                    _buildArrow(260, arrowDir!),
+                  // Card first
                   Material(
                     color: Colors.transparent,
                     child: Container(
@@ -141,7 +184,36 @@ class _TooltipCardState extends State<TooltipCard>
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: cardColor,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(
+                            arrowDir == ArrowDirection.up &&
+                                        arrowOffset.dx < 32 ||
+                                    arrowDir == ArrowDirection.left
+                                ? 0
+                                : 16,
+                          ),
+                          topRight: Radius.circular(
+                            arrowDir == ArrowDirection.up &&
+                                        arrowOffset.dx > 248 ||
+                                    arrowDir == ArrowDirection.right
+                                ? 0
+                                : 16,
+                          ),
+                          bottomLeft: Radius.circular(
+                            arrowDir == ArrowDirection.down &&
+                                        arrowOffset.dx < 32 ||
+                                    arrowDir == ArrowDirection.left
+                                ? 0
+                                : 16,
+                          ),
+                          bottomRight: Radius.circular(
+                            arrowDir == ArrowDirection.down &&
+                                        arrowOffset.dx > 248 ||
+                                    arrowDir == ArrowDirection.right
+                                ? 0
+                                : 16,
+                          ),
+                        ),
                         boxShadow: const [
                           BoxShadow(
                             color: Colors.black26,
@@ -203,8 +275,12 @@ class _TooltipCardState extends State<TooltipCard>
                       ),
                     ),
                   ),
-                  if (arrowPos == ArrowPosition.bottom)
-                    _buildArrow(targetCenterX - position.dx, arrowDir! as ArrowDirection),
+                  // Arrow always on top
+                  Positioned(
+                    left: arrowOffset.dx,
+                    top: arrowOffset.dy,
+                    child: _buildArrow(arrowDir),
+                  ),
                 ],
               ),
             ),
@@ -214,17 +290,21 @@ class _TooltipCardState extends State<TooltipCard>
     );
   }
 
-  Widget _buildArrow(double offsetX, ArrowDirection direction) {
-    return Padding(
-      padding: EdgeInsets.only(left: offsetX.clamp(10, 250)),
-      child: ScaleTransition(
-        scale: _pulseAnimation,
-        child: CustomPaint(
-          size: const Size(20, 10),
-          painter: _ArrowPainter(
-            color: widget.step.backgroundColor,
-            direction: direction,
-          ),
+  Widget _buildArrow(ArrowDirection direction) {
+    const arrowSize = 10.0; // Slightly larger arrow
+    final size = switch (direction) {
+      ArrowDirection.up || ArrowDirection.down => const Size(16, arrowSize),
+      _ => const Size(arrowSize, 16),
+    };
+
+    return Container(
+      // Add a small padding to prevent arrow from being clipped
+      padding: const EdgeInsets.all(1),
+      child: CustomPaint(
+        size: size,
+        painter: _ArrowPainter(
+          color: widget.step.backgroundColor,
+          direction: direction,
         ),
       ),
     );
@@ -240,6 +320,12 @@ class _ArrowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path();
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 1.0
+      ..isAntiAlias = true; // Smoother edges
+
     switch (direction) {
       case ArrowDirection.up:
         path.moveTo(0, size.height);
@@ -263,13 +349,9 @@ class _ArrowPainter extends CustomPainter {
         break;
     }
     path.close();
-    final paint = Paint()..color = color;
     canvas.drawPath(path, paint);
   }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
-
-
-
