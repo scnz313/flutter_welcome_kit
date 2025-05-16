@@ -1,4 +1,3 @@
-
 Flutter Welcome Kit
 
 A lightweight and customizable onboarding experience for Flutter apps. Highlight widgets with spotlight overlays and walk users through your app with step-by-step tooltips.
@@ -31,98 +30,96 @@ Add the package to your pubspec.yaml:
 dependencies:
   flutter_welcome_kit: ^1.0.0
 
-  Then run:
+Then run:
 
-  flutter pub get
-
-
-  ---
-
-  Usage
-
-  1. Assign GlobalKey to widgets you want to highlight:
-
-  final GlobalKey myKey = GlobalKey();
-
-  2. Wrap your widgets with the key:
-
-  Text('Hello!', key: myKey)
-
-  3. Create a tour controller:
-
-  final controller = TourController(
-    context: context,
-      steps: [
-          TourStep(
-                key: myKey,
-                      title: 'Welcome',
-                            description: 'This highlights the Hello text.',
-                                ),
-                                  ],
-                                  );
-
-                                  4. Start the tour:
-
-                                  controller.start();
+flutter pub get
 
 
-                                  ---
+---
 
-                                  Example
+Usage
 
-                                  To try the full example:
+1. Assign GlobalKey to widgets you want to highlight:
 
-                                  cd example
-                                  flutter run
+final GlobalKey myKey = GlobalKey();
+
+2. Wrap your widgets with the key:
+
+Text('Hello!', key: myKey)
+
+3. Create a tour controller:
+
+final controller = TourController(
+  context: context,
+  steps: [
+    TourStep(
+      key: myKey,
+      title: 'Welcome',
+      description: 'This highlights the Hello text.',
+    ),
+  ],
+);
+
+4. Start the tour:
+
+controller.start();
 
 
-                                  ---
+---
 
-                                  Screenshots
+Example
 
-                                  Spotlight Overlay	Tooltip Step
+To try the full example:
 
-                                  	
+cd example
+flutter run
 
 
+---
 
-                                    ---
+Screenshots
 
-                                    Coming Soon
+Spotlight Overlay	Tooltip Step
 
-                                    [ ] Animated transitions
-
-                                    [ ] Custom widget support
-
-                                    [ ] Persisted walkthrough state
+	
 
 
 
-                                    ---
+---
 
-                                    Contributing
+Coming Soon
 
-                                    Pull requests are welcome. For major changes, open an issue first.
+[ ] Animated transitions
 
-                                    1. Fork the repo
+[ ] Custom widget support
 
-
-                                    2. Create your branch
-
-
-                                    3. Commit your changes
-
-
-                                    4. Push and open PR
+[ ] Persisted walkthrough state
 
 
 
+---
 
-                                    ---
+Contributing
 
-                                    License
+Pull requests are welcome. For major changes, open an issue first.
 
-                                    MIT License
+1. Fork the repo
 
-                                    
+
+2. Create your branch
+
+
+3. Commit your changes
+
+
+4. Push and open PR
+
+
+
+
+---
+
+License
+
+MIT License
 
