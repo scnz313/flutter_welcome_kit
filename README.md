@@ -1,22 +1,33 @@
-# flutter_welcome_kit
+# Flutter Welcome Kit 🎉
 
 A beautiful, customizable onboarding/tour guide kit for Flutter apps. Highlight widgets, display tooltips, and guide your users step by step — perfect for tutorials and product tours.
 
----
+[![pub package](https://img.shields.io/pub/v/flutter_welcome_kit.svg)](https://pub.dev/packages/flutter_welcome_kit)
+[![likes](https://img.shields.io/pub/likes/flutter_welcome_kit)](https://pub.dev/packages/flutter_welcome_kit)
+[![popularity](https://img.shields.io/pub/popularity/flutter_welcome_kit)](https://pub.dev/packages/flutter_welcome_kit)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+## Demo
+
+![Demo](doc/screenshots/demo.gif)
+
+## Live Demo
+
+Try the live demo at: https://usman-bhat.github.io/flutter_welcome_kit/
 
 ## Features
 
-- Highlight any widget using `GlobalKey`
-- Tooltip with title, description, button, and arrow
-- Customizable background color per step
-- Auto-advance steps after a duration
-- Tap outside to skip
-- Custom text for action button (e.g., “Next”, “Close”, etc.)
-- Optional dark/light mode theming
-- Custom alignment and animations
-- Optionally show a custom widget in a step
-
----
+✨ Smart positioning system that automatically places tooltips in optimal locations  
+🎯 Highlight any widget using `GlobalKey`  
+🔥 Animated tooltips with smooth transitions  
+🎨 Multiple animation types (fade, slide, scale, bounce, rotate)  
+🌈 Customizable background color per step  
+⏱️ Auto-advance steps with configurable duration  
+🎮 Interactive or non-interactive mode  
+📱 Responsive design that adapts to screen edges  
+⌨️ Keyboard navigation support  
+♿ Accessibility support  
+📝 RTL support
 
 ## Installation
 
@@ -25,131 +36,101 @@ Add to your `pubspec.yaml`:
 ```yaml
 dependencies:
   flutter_welcome_kit: ^1.0.0
+```
 
+## Quick Start
 
----
+```dart
+// 1. Create global keys for widgets you want to highlight
+final logoKey = GlobalKey();
+final searchKey = GlobalKey();
 
-Getting Started
-
-1. Define your tour steps
-
-List<TourStep> steps = [
+// 2. Define your tour steps
+final steps = [
   TourStep(
-    key: buttonKey,
-    title: "Welcome",
-    description: "This is your main button.",
-    backgroundColor: Colors.white,
-    buttonLabel: "Next",
-    isLast: false,
+    key: logoKey,
+    title: "👋 Welcome!",
+    description: "Let's take a quick tour of the app.",
+    backgroundColor: Colors.blue.shade50,
   ),
   TourStep(
-    key: profileKey,
-    title: "Your Profile",
-    description: "Check your profile settings here.",
-    backgroundColor: Colors.deepPurple,
-    buttonLabel: "Got it",
-    isLast: true,
+    key: searchKey,
+    title: "Search",
+    description: "Find anything instantly.",
+    backgroundColor: Colors.orange.shade50,
   ),
 ];
 
-2. Start the tour
+// 3. Start the tour
+TourController(context: context, steps: steps).start();
+```
 
-WelcomeTourController().start(context, steps);
+## Customization
 
+![Customization Options](doc/screenshots/customization.png)
 
----
+### Available Positions
 
-TourStep Parameters
+![Tooltip Positions](doc/screenshots/positions.png)
 
-Property	Type	Description
+## TourStep Parameters
 
-key	GlobalKey	Target widget key
-title	String	Tooltip title
-description	String	Tooltip content
-alignment	TourAlignment	Arrow position (top, bottom, left, right, center)
-backgroundColor	Color	Tooltip background color (default: white)
-buttonLabel	String?	Optional button text (“Next”, “Close”, etc.)
-isLast	bool	Marks the last step; button text becomes “Close”
-duration	Duration	Duration before auto-next (default: 4s)
-customWidget	Widget?	Optional full custom content inside tooltip
+| Property | Type | Description |
+|----------|------|-------------|
+| key | GlobalKey | Target widget key |
+| title | String | Tooltip title |
+| description | String | Tooltip content |
+| backgroundColor | Color | Tooltip background color |
+| animation | StepAnimation | Animation type for the tooltip |
+| preferredSide | TooltipSide? | Preferred tooltip position |
+| duration | Duration | Time before auto-advance |
+| buttonLabel | String? | Custom button text |
+| isLast | bool | Marks the last step |
+| pointerPadding | double | Padding around highlighted element |
+| pointerRadius | double | Corner radius of highlight |
 
+## Available Animations
 
+- `fadeSlideUp`
+- `fadeSlideDown`
+- `fadeSlideLeft`
+- `fadeSlideRight`
+- `scale`
+- `bounce`
+- `rotate`
+- `none`
 
----
+## Tooltip Positioning
 
-Customization
+The toolkit automatically calculates the optimal position for tooltips using these options:
 
-Auto-advance: Set duration per step
+- `top`
+- `bottom`
+- `left`
+- `right`
+- `topLeft`
+- `topRight`
+- `bottomLeft`
+- `bottomRight`
 
-Button text: Use buttonLabel to override default
-
-Arrow: Built-in pointing arrow, animated with pulse
-
-Dark mode: Tooltip adapts based on app theme
-
-Custom UI: Override customWidget to show any layout
-
-
-
----
-
-License
-
-MIT License
-
-
----
-
-Contributions
-
-PRs welcome! Feel free to submit issues, suggestions, or improvements.
-
----
-
-## Inline Docs Example
-
-Here's how a class like `TourStep` should be documented:
+## Example Usage
 
 ```dart
-/// Represents a single step in the onboarding tour.
-class TourStep {
-  /// The widget key to highlight.
-  final GlobalKey key;
+TourStep(
+  key: buttonKey,
+  title: "Smart Positioning",
+  description: "Tooltips automatically position themselves optimally!",
+  backgroundColor: Colors.purple.shade50,
+  animation: StepAnimation.bounce,
+  preferredSide: TooltipSide.bottom,
+  pointerPadding: 30,
+  pointerRadius: 28,
+  duration: const Duration(seconds: 4),
+  isLast: false,
+)
+```
 
-  /// The tooltip title text.
-  final String title;
 
-  /// The tooltip description text.
-  final String description;
+## Contributing
 
-  /// Where the tooltip appears relative to the target.
-  final TourAlignment alignment;
-
-  /// Optional custom content to display instead of default layout.
-  final Widget? customWidget;
-
-  /// Background color of the tooltip.
-  final Color backgroundColor;
-
-  /// Duration before auto-advancing (if not last).
-  final Duration duration;
-
-  /// Custom label for the action button (e.g., “Next”, “Close”).
-  final String? buttonLabel;
-
-  /// If true, shows “Close” instead of “Next”.
-  final bool isLast;
-
-  /// Create a new [TourStep].
-  TourStep(
-    this.backgroundColor,
-    this.buttonLabel,
-    this.isLast, {
-    required this.key,
-    required this.title,
-    required this.description,
-    this.alignment = TourAlignment.bottom,
-    this.customWidget,
-    this.duration = const Duration(seconds: 4),
-  });
-}
+PRs welcome! Feel free to submit issues, suggestions, or improvements.

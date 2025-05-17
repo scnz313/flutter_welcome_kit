@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:flutter_welcome_kit/core/tour_step.dart';
 
 enum ArrowDirection { up, down, left, right }
@@ -9,6 +11,8 @@ class TooltipCard extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onSkip;
   final Color backgroundColor;
+  final Duration animationDuration;
+  final Curve animationCurve;
 
   const TooltipCard({
     super.key,
@@ -17,6 +21,8 @@ class TooltipCard extends StatefulWidget {
     required this.onNext,
     required this.onSkip,
     this.backgroundColor = Colors.white,
+    this.animationDuration = const Duration(milliseconds: 400),
+    this.animationCurve = Curves.easeInOut,
   });
 
   @override
@@ -34,11 +40,11 @@ class _TooltipCardState extends State<TooltipCard>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: widget.animationDuration,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeInOut,
+      curve: widget.animationCurve,
     );
     _scaleAnimation = Tween<double>(
       begin: 0.95,
@@ -60,23 +66,37 @@ class _TooltipCardState extends State<TooltipCard>
   }
 
   Offset _calculatePosition(Size screenSize) {
+    // Add validation for screen size
+    if (screenSize.width <= 0 || screenSize.height <= 0) {
+      return const Offset(0, 0);
+    }
+
     const double verticalOffset = 16;
     const double horizontalPadding = 20;
     double dx = horizontalPadding;
     double dy = widget.targetRect.bottom + verticalOffset + 12;
 
-    if (dy + 200 > screenSize.height) {
-      dy = widget.targetRect.top - 180;
+    // Improve positioning logic
+    final cardHeight = 200.0;
+    final cardWidth = 300.0;
+    
+    if (dy + cardHeight > screenSize.height) {
+      dy = widget.targetRect.top - cardHeight - verticalOffset;
+      // Fallback if no space above or below
+      if (dy < 0) {
+        dy = (screenSize.height - cardHeight) / 2;
+      }
     }
+
     if (widget.targetRect.left < screenSize.width / 2) {
       dx = horizontalPadding;
     } else {
-      dx = screenSize.width - 320;
+      dx = screenSize.width - cardWidth - horizontalPadding;
     }
 
     return Offset(
-      dx.clamp(0, screenSize.width - 300),
-      dy.clamp(0, screenSize.height - 250),
+      dx.clamp(0, screenSize.width - cardWidth),
+      dy.clamp(0, screenSize.height - cardHeight),
     );
   }
 
@@ -154,139 +174,155 @@ class _TooltipCardState extends State<TooltipCard>
         : (isDark ? Colors.grey[850]! : Colors.white);
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    return Stack(
-      children: [
-        GestureDetector(
-          onTap: widget.onSkip,
-          behavior: HitTestBehavior.translucent,
-          child: Container(
-            width: screenSize.width,
-            height: screenSize.height,
-            color: Colors.transparent,
+    return Focus(
+      autofocus: true,
+      onKey: (node, event) {
+        if (event is RawKeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.escape) {
+            widget.onSkip();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.enter ||
+                    event.logicalKey == LogicalKeyboardKey.space) {
+            widget.onNext();
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: widget.onSkip,
+            behavior: HitTestBehavior.translucent,
+            child: Container(
+              width: screenSize.width,
+              height: screenSize.height,
+              color: Colors.transparent,
+            ),
           ),
-        ),
-        Positioned(
-          top: position.dy,
-          left: position.dx,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Stack(
-                clipBehavior:
-                    Clip.none, // Important: Allow arrow to render outside card
-                children: [
-                  // Card first
-                  Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      width: 280,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(
-                            arrowDir == ArrowDirection.up &&
-                                        arrowOffset.dx < 32 ||
-                                    arrowDir == ArrowDirection.left
-                                ? 0
-                                : 16,
+          Positioned(
+            top: position.dy,
+            left: position.dx,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Stack(
+                  clipBehavior:
+                      Clip.none, // Important: Allow arrow to render outside card
+                  children: [
+                    // Card first
+                    Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        width: 280,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(
+                              arrowDir == ArrowDirection.up &&
+                                          arrowOffset.dx < 32 ||
+                                      arrowDir == ArrowDirection.left
+                                  ? 0
+                                  : 16,
+                            ),
+                            topRight: Radius.circular(
+                              arrowDir == ArrowDirection.up &&
+                                          arrowOffset.dx > 248 ||
+                                      arrowDir == ArrowDirection.right
+                                  ? 0
+                                  : 16,
+                            ),
+                            bottomLeft: Radius.circular(
+                              arrowDir == ArrowDirection.down &&
+                                          arrowOffset.dx < 32 ||
+                                      arrowDir == ArrowDirection.left
+                                  ? 0
+                                  : 16,
+                            ),
+                            bottomRight: Radius.circular(
+                              arrowDir == ArrowDirection.down &&
+                                          arrowOffset.dx > 248 ||
+                                      arrowDir == ArrowDirection.right
+                                  ? 0
+                                  : 16,
+                            ),
                           ),
-                          topRight: Radius.circular(
-                            arrowDir == ArrowDirection.up &&
-                                        arrowOffset.dx > 248 ||
-                                    arrowDir == ArrowDirection.right
-                                ? 0
-                                : 16,
-                          ),
-                          bottomLeft: Radius.circular(
-                            arrowDir == ArrowDirection.down &&
-                                        arrowOffset.dx < 32 ||
-                                    arrowDir == ArrowDirection.left
-                                ? 0
-                                : 16,
-                          ),
-                          bottomRight: Radius.circular(
-                            arrowDir == ArrowDirection.down &&
-                                        arrowOffset.dx > 248 ||
-                                    arrowDir == ArrowDirection.right
-                                ? 0
-                                : 16,
-                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 12,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
                         ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 12,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  widget.step.title,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(color: textColor),
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: widget.onSkip,
-                                icon: const Icon(Icons.close),
-                                splashRadius: 20,
-                                tooltip: 'Close',
-                                color: textColor,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.step.description,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(color: textColor),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              ElevatedButton(
-                                onPressed: widget.onNext,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isDark
-                                      ? Colors.white
-                                      : Theme.of(context).primaryColor,
-                                  foregroundColor: isDark
-                                      ? Colors.black
-                                      : Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    widget.step.title,
+                                    style: Theme.of(context).textTheme.titleMedium
+                                        ?.copyWith(color: textColor),
                                   ),
                                 ),
-                                child: Text(buttonLabel),
-                              ),
-                            ],
-                          ),
-                        ],
+                                IconButton(
+                                  onPressed: widget.onSkip,
+                                  icon: const Icon(Icons.close),
+                                  splashRadius: 20,
+                                  tooltip: 'Close',
+                                  color: textColor,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.step.description,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(color: textColor),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: widget.onNext,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isDark
+                                        ? Colors.white
+                                        : Theme.of(context).primaryColor,
+                                    foregroundColor: isDark
+                                        ? Colors.black
+                                        : Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(buttonLabel),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  // Arrow always on top
-                  Positioned(
-                    left: arrowOffset.dx,
-                    top: arrowOffset.dy,
-                    child: _buildArrow(arrowDir),
-                  ),
-                ],
+                    // Arrow always on top
+                    Positioned(
+                      left: arrowOffset.dx,
+                      top: arrowOffset.dy,
+                      child: _buildArrow(arrowDir),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

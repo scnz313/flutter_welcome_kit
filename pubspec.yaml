@@ -1,13 +1,14 @@
 name: flutter_welcome_kit
 description: A lightweight and customizable onboarding tour guide for Flutter apps with spotlight overlays and step-by-step tooltips.
 version: 1.0.0
-homepage: https://github.com/your-username/flutter_welcome_kit
-repository: https://github.com/your-username/flutter_welcome_kit
-issue_tracker: https://github.com/your-username/flutter_welcome_kit/issues
+homepage: https://github.com/Usman-bhat/flutter_welcome_kit
+repository: https://github.com/Usman-bhat/flutter_welcome_kit
+issue_tracker: https://github.com/Usman-bhat/flutter_welcome_kit/issues
+documentation: https://github.com/Usman-bhat/flutter_welcome_kit/wiki
 
 environment:
-  sdk: ^3.8.0-278.4.beta
-  flutter: ">=1.17.0"
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.0.0"
 
 dependencies:
   flutter:
@@ -16,12 +17,21 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
+screenshots:
+  - description: 'Welcome Kit Demo'
+    path: doc/screenshots/demo.gif
+  - description: 'Different tooltip positions'
+    path: doc/screenshots/positions.png
+  - description: 'Customization options'
+    path: doc/screenshots/customization.png
 
-# The following section is specific to Flutter packages.
-flutter:
+topics:
+  - onboarding
+  - tutorial
+  - tour
+  - tooltip
+  - guide
 
 
