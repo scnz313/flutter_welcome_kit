@@ -7,16 +7,10 @@
   <meta name="description" content="Flutter Welcome Kit Demo">
   <title>Flutter Welcome Kit</title>
   <link rel="manifest" href="manifest.json">
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = null;
-  </script>
-  <script src="flutter.js" defer></script>
 </head>
 <body>
   <script>
     window.addEventListener('load', function(ev) {
-      // Download main.dart.js
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
@@ -29,5 +23,6 @@
       });
     });
   </script>
+  <script src="flutter.js" defer></script>
 </body>
 </html>

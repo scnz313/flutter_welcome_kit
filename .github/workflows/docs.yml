@@ -8,6 +8,8 @@ on:
 jobs:
   deploy-docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Add this line for write permissions
     steps:
       - uses: actions/checkout@v3
       
@@ -20,11 +22,15 @@ jobs:
       - name: Install Dependencies
         run: |
           flutter pub get
-          flutter pub global activate dhttpd
+          cd example
+          flutter pub get
       
       - name: Build Example
         working-directory: ./example
-        run: flutter build web
+        run: |
+          flutter build web --base-href '/flutter_welcome_kit/'
+          # Add a .nojekyll file to bypass Jekyll processing
+          touch build/web/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
