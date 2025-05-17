@@ -7,7 +7,7 @@ issue_tracker: https://github.com/Usman-bhat/flutter_welcome_kit/issues
 documentation: https://github.com/Usman-bhat/flutter_welcome_kit/wiki
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'  # Update this line
   flutter: ">=3.0.0"
 
 dependencies:
