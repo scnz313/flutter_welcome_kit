@@ -9,6 +9,7 @@
 .history
 .devcontainer
 .svn/
+.idx/
 migrate_working_dir/
 
 # IntelliJ related
