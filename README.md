@@ -9,7 +9,7 @@ A beautiful, customizable onboarding/tour guide kit for Flutter apps. Highlight 
 
 ## Demo
 
-![Demo](doc/screenshots/demo.gif)
+![Demo](docs/screenshots/demo.gif)
 
 ## Live Demo
 
@@ -67,11 +67,8 @@ TourController(context: context, steps: steps).start();
 
 ## Customization
 
-![Customization Options](doc/screenshots/customization.png)
+![Customization Options](docs/screenshots/comp.jpg)
 
-### Available Positions
-
-![Tooltip Positions](doc/screenshots/positions.png)
 
 ## TourStep Parameters
 
