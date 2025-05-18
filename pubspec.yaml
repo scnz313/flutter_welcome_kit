@@ -22,10 +22,8 @@ dev_dependencies:
 screenshots:
   - description: 'Welcome Kit Demo'
     path: doc/screenshots/demo.gif
-  - description: 'Different tooltip positions'
-    path: doc/screenshots/positions.png
   - description: 'Customization options'
-    path: doc/screenshots/customization.png
+    path: doc/screenshots/comp.png
 
 topics:
   - onboarding
