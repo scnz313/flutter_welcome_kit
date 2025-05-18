@@ -23,7 +23,7 @@ screenshots:
   - description: 'Welcome Kit Demo'
     path: doc/screenshots/demo.gif
   - description: 'Customization options'
-    path: doc/screenshots/comp.png
+    path: doc/screenshots/comp.jpg
 
 topics:
   - onboarding
