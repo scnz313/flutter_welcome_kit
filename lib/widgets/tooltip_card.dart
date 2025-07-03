@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_welcome_kit/core/tour_step.dart';
+import 'package:flutter_welcome_kit/core/tour_config.dart';
 
 enum ArrowDirection { up, down, left, right }
 
@@ -13,6 +14,8 @@ class TooltipCard extends StatefulWidget {
   final Color backgroundColor;
   final Duration animationDuration;
   final Curve animationCurve;
+  final int currentStep;
+  final int totalSteps;
 
   const TooltipCard({
     super.key,
@@ -23,6 +26,8 @@ class TooltipCard extends StatefulWidget {
     this.backgroundColor = Colors.white,
     this.animationDuration = const Duration(milliseconds: 400),
     this.animationCurve = Curves.easeInOut,
+    this.currentStep = 0,
+    this.totalSteps = 0,
   });
 
   @override
@@ -34,6 +39,7 @@ class _TooltipCardState extends State<TooltipCard>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  Animation<Offset>? _slideAnimation;
 
   @override
   void initState() {
@@ -50,6 +56,16 @@ class _TooltipCardState extends State<TooltipCard>
       begin: 0.95,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.decelerate));
+
+    // Optional slide animation
+    if (widget.step.animation == StepAnimation.slide) {
+      _slideAnimation = Tween<Offset>(
+        begin: const Offset(0, .05),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+      );
+    }
 
     _controller.forward();
     Future.delayed(widget.step.duration, () {
@@ -77,8 +93,10 @@ class _TooltipCardState extends State<TooltipCard>
     double dy = widget.targetRect.bottom + verticalOffset + 12;
 
     // Improve positioning logic
+    final config = TourConfig.instance;
     final cardHeight = 200.0;
-    final cardWidth = 300.0;
+    final cardWidth = config.tooltipWidth?.clamp(220.0, screenSize.width - 40) ??
+        280.0;
     
     if (dy + cardHeight > screenSize.height) {
       dy = widget.targetRect.top - cardHeight - verticalOffset;
@@ -160,6 +178,7 @@ class _TooltipCardState extends State<TooltipCard>
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final config = TourConfig.instance;
     final position = _calculatePosition(screenSize);
     final (arrowDir, arrowOffset) = _calculateArrowPlacement(
       screenSize,
@@ -169,10 +188,19 @@ class _TooltipCardState extends State<TooltipCard>
     final buttonLabel =
         widget.step.buttonLabel ?? (widget.step.isLast ? "Close" : "Next");
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = widget.step.backgroundColor != Colors.white
-        ? widget.step.backgroundColor
-        : (isDark ? Colors.grey[850]! : Colors.white);
+    final cardColor =
+        widget.step.backgroundColor != Colors.white // override
+            ? widget.step.backgroundColor
+            : config.backgroundColor;
     final textColor = isDark ? Colors.white : Colors.black87;
+
+    final progressText = config.showProgressIndicator &&
+            widget.step.showProgress &&
+            widget.totalSteps > 0
+        ? config.progressIndicatorFormat
+            .replaceAll('{current}', (widget.currentStep + 1).toString())
+            .replaceAll('{total}', widget.totalSteps.toString())
+        : null;
 
     return Focus(
       autofocus: true,
@@ -191,6 +219,20 @@ class _TooltipCardState extends State<TooltipCard>
       },
       child: Stack(
         children: [
+          // Swipe handling
+          Positioned.fill(
+            child: GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null) {
+                  if (details.primaryVelocity! < 0) {
+                    widget.onNext(); // swipe left → next
+                  } else {
+                    widget.onSkip(); // swipe right → skip/prev
+                  }
+                }
+              },
+            ),
+          ),
           GestureDetector(
             onTap: widget.onSkip,
             behavior: HitTestBehavior.translucent,
@@ -205,123 +247,150 @@ class _TooltipCardState extends State<TooltipCard>
             left: position.dx,
             child: FadeTransition(
               opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Stack(
-                  clipBehavior:
-                      Clip.none, // Important: Allow arrow to render outside card
-                  children: [
-                    // Card first
-                    Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        width: 280,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(
-                              arrowDir == ArrowDirection.up &&
-                                          arrowOffset.dx < 32 ||
-                                      arrowDir == ArrowDirection.left
-                                  ? 0
-                                  : 16,
-                            ),
-                            topRight: Radius.circular(
-                              arrowDir == ArrowDirection.up &&
-                                          arrowOffset.dx > 248 ||
-                                      arrowDir == ArrowDirection.right
-                                  ? 0
-                                  : 16,
-                            ),
-                            bottomLeft: Radius.circular(
-                              arrowDir == ArrowDirection.down &&
-                                          arrowOffset.dx < 32 ||
-                                      arrowDir == ArrowDirection.left
-                                  ? 0
-                                  : 16,
-                            ),
-                            bottomRight: Radius.circular(
-                              arrowDir == ArrowDirection.down &&
-                                          arrowOffset.dx > 248 ||
-                                      arrowDir == ArrowDirection.right
-                                  ? 0
-                                  : 16,
-                            ),
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 12,
-                              offset: Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    widget.step.title,
-                                    style: Theme.of(context).textTheme.titleMedium
-                                        ?.copyWith(color: textColor),
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: widget.onSkip,
-                                  icon: const Icon(Icons.close),
-                                  splashRadius: 20,
-                                  tooltip: 'Close',
-                                  color: textColor,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.step.description,
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(color: textColor),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: widget.onNext,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isDark
-                                        ? Colors.white
-                                        : Theme.of(context).primaryColor,
-                                    foregroundColor: isDark
-                                        ? Colors.black
-                                        : Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: Text(buttonLabel),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+              child: (_slideAnimation != null)
+                  ? SlideTransition(
+                      position: _slideAnimation!,
+                      child: _buildCard(
+                          cardColor, textColor, arrowDir, arrowOffset, progressText),
+                    )
+                  : ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: _buildCard(
+                          cardColor, textColor, arrowDir, arrowOffset, progressText),
                     ),
-                    // Arrow always on top
-                    Positioned(
-                      left: arrowOffset.dx,
-                      top: arrowOffset.dy,
-                      child: _buildArrow(arrowDir),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCard(Color cardColor, Color textColor, ArrowDirection arrowDir,
+      Offset arrowOffset, String? progressText) {
+    return Semantics(
+      label: widget.step.semanticLabel ?? widget.step.title,
+      hint: widget.step.semanticHint ?? widget.step.description,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Card first
+          Material(
+            color: Colors.transparent,
+            child: Container(
+              width:
+                  TourConfig.instance.tooltipWidth ?? 280, // responsive config
+              padding: TourConfig.instance.tooltipPadding,
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius:
+                    TourConfig.instance.tooltipBorderRadius, // use config
+                boxShadow: [
+                  BoxShadow(
+                    color: TourConfig.instance.tooltipShadowColor ??
+                        Colors.black26,
+                    blurRadius: TourConfig.instance.tooltipElevation,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (progressText != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4.0),
+                      child: Text(
+                        progressText,
+                        style: config.progressIndicatorStyle ??
+                            Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(color: textColor.withOpacity(.6)),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      if (widget.step.icon != null)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Icon(widget.step.icon, color: textColor),
+                        ),
+                      Expanded(
+                        child: Text(
+                          widget.step.title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(color: textColor),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: widget.onSkip,
+                        icon: const Icon(Icons.close),
+                        splashRadius: 20,
+                        tooltip: 'Close',
+                        color: textColor,
+                      ),
+                    ],
+                  ),
+                  if (widget.step.image != null) ...[
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image(
+                        image: widget.step.image!,
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.step.description,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: textColor),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        onPressed: widget.onNext,
+                        style: TourConfig.instance.buttonStyle ??
+                            ElevatedButton.styleFrom(
+                              backgroundColor: isDark
+                                  ? Colors.white
+                                  : Theme.of(context).primaryColor,
+                              foregroundColor:
+                                  isDark ? Colors.black : Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                        child: Text(widget.step.buttonLabel ??
+                            (widget.step.isLast ? "Close" : "Next")),
+                      ),
+                    ],
+                  ),
+                ],
+                child: Stack(
+                ],
+                  ],
+            ),
+          ),
+          // Arrow always on top
+          Positioned(
+            left: arrowOffset.dx,
+            top: arrowOffset.dy,
+            child: _buildArrow(arrowDir),
+          ),
+        ],
+      ),
+    );
       ),
     );
   }
