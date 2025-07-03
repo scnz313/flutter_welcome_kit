@@ -209,7 +209,7 @@ class OverlayPainter {
   }
 
   /// Calculates the optimal arrow position for connecting a tooltip to a target
-  static (ArrowDirection, Offset) calculateArrowPosition(
+  static (TooltipArrowDirection, Offset) calculateArrowPosition(
     Rect targetRect,
     Rect tooltipRect,
   ) {
@@ -220,14 +220,14 @@ class OverlayPainter {
     final horizontalDistance = (targetCenter.dx - tooltipCenter.dx).abs();
     final verticalDistance = (targetCenter.dy - tooltipCenter.dy).abs();
     
-    ArrowDirection direction;
+    TooltipArrowDirection direction;
     Offset position;
     
     if (horizontalDistance > verticalDistance) {
       // Primarily horizontal relationship
       if (targetCenter.dx < tooltipCenter.dx) {
         // Target is to the left of tooltip
-        direction = ArrowDirection.left;
+        direction = TooltipArrowDirection.left;
         position = Offset(
           tooltipRect.left,
           tooltipRect.top + (targetCenter.dy - tooltipRect.top).clamp(
@@ -237,7 +237,7 @@ class OverlayPainter {
         );
       } else {
         // Target is to the right of tooltip
-        direction = ArrowDirection.right;
+        direction = TooltipArrowDirection.right;
         position = Offset(
           tooltipRect.right,
           tooltipRect.top + (targetCenter.dy - tooltipRect.top).clamp(
@@ -250,7 +250,7 @@ class OverlayPainter {
       // Primarily vertical relationship
       if (targetCenter.dy < tooltipCenter.dy) {
         // Target is above tooltip
-        direction = ArrowDirection.up;
+        direction = TooltipArrowDirection.up;
         position = Offset(
           tooltipRect.left + (targetCenter.dx - tooltipRect.left).clamp(
             16.0,
@@ -260,7 +260,7 @@ class OverlayPainter {
         );
       } else {
         // Target is below tooltip
-        direction = ArrowDirection.down;
+        direction = TooltipArrowDirection.down;
         position = Offset(
           tooltipRect.left + (targetCenter.dx - tooltipRect.left).clamp(
             16.0,
@@ -305,7 +305,7 @@ class OverlayPainter {
 }
 
 /// Enum defining the possible arrow directions for tooltips
-enum ArrowDirection {
+enum TooltipArrowDirection {
   up,
   down,
   left,
