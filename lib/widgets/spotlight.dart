@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/semantics.dart';
 import 'package:flutter_welcome_kit/core/tour_step.dart';
+import 'dart:math' as math; // moved from bottom to fix directive order
 
 /// Defines the shape of the spotlight cutout.
 enum SpotlightShape {
@@ -393,6 +394,3 @@ class _SpotlightPainter extends CustomPainter {
 extension on double {
   double sin(double x) => math.sin(x);
 }
-
-// Import math for min/max operations
-import 'dart:math' as math;
