@@ -7,14 +7,20 @@ class TooltipOverlayWrapper extends StatefulWidget {
   final TourStep step;
   final Rect targetRect;
   final VoidCallback onNext;
+  final VoidCallback? onPrevious;
   final VoidCallback onSkip;
+  final int stepIndex;
+  final int totalSteps;
 
   const TooltipOverlayWrapper({
     super.key,
     required this.step,
     required this.targetRect,
     required this.onNext,
+    required this.onPrevious,
     required this.onSkip,
+    required this.stepIndex,
+    required this.totalSteps,
   });
 
   @override
@@ -61,8 +67,10 @@ class _TooltipOverlayWrapperState extends State<TooltipOverlayWrapper> {
             step: widget.step,
             targetRect: widget.targetRect,
             onNext: widget.onNext,
+            onPrevious: widget.onPrevious,
             onSkip: widget.onSkip,
-            backgroundColor: widget.step.backgroundColor,
+            stepIndex: widget.stepIndex,
+            totalSteps: widget.totalSteps,
           ),
         ],
       ),
