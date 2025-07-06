@@ -1,79 +1,107 @@
-// File: example/lib/main.dart
-
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_welcome_kit/flutter_welcome_kit.dart';
 
 void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Welcome Kit Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final GlobalKey _buttonKey = GlobalKey();
-  final GlobalKey _textKey = GlobalKey();
-
-  late TourController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller = TourController(
-        context: context,
-        steps: [
-          TourStep(
-            key: _textKey,
-            title: "Welcome!",
-            description: "This is an introductory message.",
-          ),
-          TourStep(
-            key: _buttonKey,
-            title: "Start Button",
-            description: "Click this button to begin your journey.",
-            alignment: TourAlignment.top,
-          ),
-        ],
+  group('TourStep', () {
+    test('should create TourStep with required parameters', () {
+      final key = GlobalKey();
+      final step = TourStep(
+        key: key,
+        title: 'Test Title',
+        description: 'Test Description',
       );
-    });
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Welcome Kit Example')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("Hello there!", key: _textKey),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              key: _buttonKey,
-              onPressed: () => _controller.start(),
-              child: const Text("Show Tour"),
-            ),
-          ],
+      expect(step.key, equals(key));
+      expect(step.title, equals('Test Title'));
+      expect(step.description, equals('Test Description'));
+      expect(step.backgroundColor, equals(Colors.white));
+      expect(step.animation, equals(StepAnimation.fadeSlideUp));
+      expect(step.isLast, equals(false));
+    });
+
+    test('should create TourStep with custom parameters', () {
+      final key = GlobalKey();
+      final step = TourStep(
+        key: key,
+        title: 'Custom Title',
+        description: 'Custom Description',
+        backgroundColor: Colors.blue,
+        animation: StepAnimation.bounce,
+        preferredSide: TooltipSide.top,
+        isLast: true,
+        textColor: Colors.white,
+        pointerPadding: 12.0,
+        pointerRadius: 16.0,
+      );
+
+      expect(step.backgroundColor, equals(Colors.blue));
+      expect(step.animation, equals(StepAnimation.bounce));
+      expect(step.preferredSide, equals(TooltipSide.top));
+      expect(step.isLast, equals(true));
+      expect(step.textColor, equals(Colors.white));
+      expect(step.pointerPadding, equals(12.0));
+      expect(step.pointerRadius, equals(16.0));
+    });
+  });
+
+  group('StepAnimation', () {
+    test('should have all animation types', () {
+      expect(StepAnimation.values.length, equals(8));
+      expect(StepAnimation.values, contains(StepAnimation.fadeSlideUp));
+      expect(StepAnimation.values, contains(StepAnimation.fadeSlideDown));
+      expect(StepAnimation.values, contains(StepAnimation.fadeSlideLeft));
+      expect(StepAnimation.values, contains(StepAnimation.fadeSlideRight));
+      expect(StepAnimation.values, contains(StepAnimation.scale));
+      expect(StepAnimation.values, contains(StepAnimation.bounce));
+      expect(StepAnimation.values, contains(StepAnimation.rotate));
+      expect(StepAnimation.values, contains(StepAnimation.none));
+    });
+  });
+
+  group('TooltipSide', () {
+    test('should have all positioning options', () {
+      expect(TooltipSide.values.length, equals(8));
+      expect(TooltipSide.values, contains(TooltipSide.top));
+      expect(TooltipSide.values, contains(TooltipSide.bottom));
+      expect(TooltipSide.values, contains(TooltipSide.left));
+      expect(TooltipSide.values, contains(TooltipSide.right));
+      expect(TooltipSide.values, contains(TooltipSide.topLeft));
+      expect(TooltipSide.values, contains(TooltipSide.topRight));
+      expect(TooltipSide.values, contains(TooltipSide.bottomLeft));
+      expect(TooltipSide.values, contains(TooltipSide.bottomRight));
+    });
+  });
+
+  testWidgets('TourController should be created with valid steps', (tester) async {
+    final key = GlobalKey();
+    final steps = [
+      TourStep(
+        key: key,
+        title: 'Test',
+        description: 'Test Description',
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            final controller = TourController(
+              context: context,
+              steps: steps,
+            );
+            
+            expect(controller.totalSteps, equals(1));
+            expect(controller.isActive, equals(false));
+            expect(controller.currentStepIndex, equals(0));
+            
+            return const Scaffold(
+              body: Text('Test'),
+            );
+          },
         ),
       ),
     );
-  }
+  });
 }

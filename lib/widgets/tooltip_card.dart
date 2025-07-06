@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:math' as math;
 
 import 'package:flutter_welcome_kit/core/tour_step.dart';
 
@@ -42,7 +41,7 @@ class _TooltipCardState extends State<TooltipCard>
 
   TooltipSide _actualSide = TooltipSide.bottom;
   Offset _tooltipPosition = Offset.zero;
-  Size _tooltipSize = const Size(300, 180);
+  final Size _tooltipSize = const Size(300, 180);
 
   @override
   void initState() {
@@ -370,7 +369,7 @@ class _TooltipCardState extends State<TooltipCard>
 
     return Focus(
       autofocus: widget.enableKeyboardNavigation,
-      onKey: widget.enableKeyboardNavigation ? _handleKeyEvent : null,
+      onKeyEvent: widget.enableKeyboardNavigation ? _handleKeyEvent : null,
       child: Semantics(
         label: widget.step.accessibilityLabel ?? '${widget.step.title}. ${widget.step.description}',
         hint: 'Step ${widget.stepIndex + 1} of ${widget.totalSteps}',
@@ -625,8 +624,8 @@ class _TooltipCardState extends State<TooltipCard>
     }
   }
 
-  KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
       switch (event.logicalKey) {
         case LogicalKeyboardKey.escape:
           widget.onSkip();

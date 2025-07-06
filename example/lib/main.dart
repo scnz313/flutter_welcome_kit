@@ -415,11 +415,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ],
           ),
           const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: _completedSteps / 10,
-            backgroundColor: theme.colorScheme.surfaceVariant,
-            valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
-          ),
+                     LinearProgressIndicator(
+             value: _completedSteps / 10,
+             backgroundColor: theme.colorScheme.surfaceContainerHighest,
+             valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+           ),
           if (_tourCompleted) ...[
             const SizedBox(height: 8),
             Row(
@@ -753,10 +753,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(8),
-            ),
+                         decoration: BoxDecoration(
+               color: theme.colorScheme.surfaceContainerHighest,
+               borderRadius: BorderRadius.circular(8),
+             ),
             child: Text(
               'dependencies:\n  flutter_welcome_kit: ^1.0.0',
               style: theme.textTheme.bodySmall?.copyWith(

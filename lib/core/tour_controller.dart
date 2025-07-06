@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_welcome_kit/core/tour_step.dart';
 import 'package:flutter_welcome_kit/widgets/spotlight.dart';
 import 'package:flutter_welcome_kit/widgets/tooltip_card.dart';
