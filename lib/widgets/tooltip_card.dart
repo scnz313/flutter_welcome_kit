@@ -99,16 +99,16 @@ class _TooltipCardState extends State<TooltipCard>
     Offset begin;
     switch (widget.step.animation) {
       case StepAnimation.fadeSlideUp:
-        begin = const Offset(0, 50);
+        begin = const Offset(0, 0.1); // fractional for SlideTransition
         break;
       case StepAnimation.fadeSlideDown:
-        begin = const Offset(0, -50);
+        begin = const Offset(0, -0.1);
         break;
       case StepAnimation.fadeSlideLeft:
-        begin = const Offset(50, 0);
+        begin = const Offset(0.1, 0);
         break;
       case StepAnimation.fadeSlideRight:
-        begin = const Offset(-50, 0);
+        begin = const Offset(-0.1, 0);
         break;
       default:
         begin = Offset.zero;

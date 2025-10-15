@@ -1,6 +1,6 @@
 // File: lib/flutter_welcome_kit.dart
 
-library;
+library flutter_welcome_kit;
 
 export 'core/tour_controller.dart';
 export 'core/tour_step.dart';
