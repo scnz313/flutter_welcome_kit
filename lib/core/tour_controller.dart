@@ -175,7 +175,7 @@ class TourController {
         onNext: next,
         onPrevious: _currentStepIndex > 0 ? previous : null,
         onSkip: () => end(completed: false),
-        enableKeyboardNavigation: enableKeyboardNavigation,
+        enableKeyboardNavigation: enableKeyboardNavigation && step.enableInteraction,
         stepIndex: _currentStepIndex,
         totalSteps: steps.length,
       ),
@@ -186,7 +186,8 @@ class TourController {
 
   void _announceForAccessibility(String message) {
     // Use SemanticsService to announce messages for screen readers
-    SemanticsService.announce(message, TextDirection.ltr);
+    final textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr;
+    SemanticsService.announce(message, textDirection);
   }
 }
 
@@ -252,8 +253,10 @@ class _TourOverlayState extends State<_TourOverlay>
           animation: _animation,
           builder: (context, child) => Spotlight(
             targetRect: widget.targetRect,
-            cornerRadius: widget.cornerRadius,
+        cornerRadius: widget.cornerRadius,
             animationValue: _animation.value,
+        overlayColor: widget.step.overlayColor,
+        blurRadius: widget.step.overlayBlurRadius,
           ),
         ),
         // Tooltip card

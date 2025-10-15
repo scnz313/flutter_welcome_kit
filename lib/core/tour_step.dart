@@ -29,6 +29,8 @@ class TourStep {
   final String title;
   final String description;
   final Color backgroundColor;
+  final Color overlayColor;
+  final double overlayBlurRadius;
   final Duration duration;
   final String? buttonLabel;
   final bool isLast;
@@ -47,6 +49,8 @@ class TourStep {
     required this.title,
     required this.description,
     this.backgroundColor = Colors.white,
+    this.overlayColor = const Color.fromRGBO(0, 0, 0, 0.7),
+    this.overlayBlurRadius = 0.0,
     this.duration = const Duration(seconds: 4),
     this.buttonLabel,
     this.isLast = false,

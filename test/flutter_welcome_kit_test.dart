@@ -27,6 +27,8 @@ void main() {
         title: 'Custom Title',
         description: 'Custom Description',
         backgroundColor: Colors.blue,
+        overlayColor: Colors.black.withOpacity(0.6),
+        overlayBlurRadius: 2.0,
         animation: StepAnimation.bounce,
         preferredSide: TooltipSide.top,
         isLast: true,
@@ -42,6 +44,8 @@ void main() {
       expect(step.textColor, equals(Colors.white));
       expect(step.pointerPadding, equals(12.0));
       expect(step.pointerRadius, equals(16.0));
+      expect(step.overlayColor.opacity, closeTo(0.6, 0.01));
+      expect(step.overlayBlurRadius, equals(2.0));
     });
   });
 
