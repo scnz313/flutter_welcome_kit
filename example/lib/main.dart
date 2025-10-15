@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final GlobalKey _fabKey = GlobalKey();
   final GlobalKey _progressKey = GlobalKey();
 
-  late TourController _tourController;
+  TourController? _tourController;
   late AnimationController _textAnimationController;
   late AnimationController _cardAnimationController;
   late Animation<double> _textAnimation;
@@ -286,7 +286,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _tourCompleted = false;
       _completedSteps = 0;
     });
-    _tourController.start();
+    _tourController?.start();
   }
 
   @override
@@ -370,10 +370,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
       floatingActionButton: FloatingActionButton.extended(
         key: _fabKey,
-        onPressed: _tourController.isActive ? null : () => _tourController.start(),
-        icon: Icon(_tourController.isActive ? Icons.tour : Icons.play_arrow),
-        label: Text(_tourController.isActive ? 'Tour Active' : 'Start Tour'),
-        backgroundColor: _tourController.isActive ? Colors.grey : theme.primaryColor,
+        onPressed: (_tourController?.isActive ?? false) ? null : () => _tourController?.start(),
+        icon: Icon((_tourController?.isActive ?? false) ? Icons.tour : Icons.play_arrow),
+        label: Text((_tourController?.isActive ?? false) ? 'Tour Active' : 'Start Tour'),
+        backgroundColor: (_tourController?.isActive ?? false) ? Colors.grey : theme.primaryColor,
       ),
     );
   }
@@ -415,11 +415,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ],
           ),
           const SizedBox(height: 12),
-                     LinearProgressIndicator(
-             value: _completedSteps / 10,
-             backgroundColor: theme.colorScheme.surfaceContainerHighest,
-             valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
-           ),
+          LinearProgressIndicator(
+            value: _completedSteps / 10,
+            backgroundColor: theme.colorScheme.surfaceVariant,
+            valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+          ),
           if (_tourCompleted) ...[
             const SizedBox(height: 8),
             Row(
@@ -753,10 +753,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
-                         decoration: BoxDecoration(
-               color: theme.colorScheme.surfaceContainerHighest,
-               borderRadius: BorderRadius.circular(8),
-             ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Text(
               'dependencies:\n  flutter_welcome_kit: ^1.0.0',
               style: theme.textTheme.bodySmall?.copyWith(

@@ -128,25 +128,40 @@ class TourController {
 
   void _showStep() {
     if (!_isActive) return;
-    
+
     _overlayEntry?.remove();
 
     final step = steps[_currentStepIndex];
-    final renderBox = step.key.currentContext?.findRenderObject() as RenderBox?;
-    final overlay = Overlay.of(context);
+    final renderObject = step.key.currentContext?.findRenderObject();
+    final overlayState = Overlay.of(context, rootOverlay: true);
 
-    if (renderBox == null) {
-      // If widget is not found, skip to next step or end tour
-      if (_currentStepIndex < steps.length - 1) {
-        _currentStepIndex++;
-        _showStep();
-      } else {
-        end();
-      }
+    // Ensure overlay is available; if not, try again on next frame
+    if (overlayState == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_isActive) _showStep();
+      });
       return;
     }
 
-    final target = renderBox.localToGlobal(Offset.zero) & renderBox.size;
+    // Validate target render box and layout state
+    if (renderObject is! RenderBox || !renderObject.attached || !renderObject.hasSize) {
+      // If target isn't laid out yet, try again on next frame; otherwise skip/end
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_isActive) return;
+        final ro = step.key.currentContext?.findRenderObject();
+        if (ro is RenderBox && ro.attached && ro.hasSize) {
+          _showStep();
+        } else if (_currentStepIndex < steps.length - 1) {
+          _currentStepIndex++;
+          _showStep();
+        } else {
+          end();
+        }
+      });
+      return;
+    }
+
+    final target = renderObject.localToGlobal(Offset.zero) & renderObject.size;
     final paddedTarget = target.inflate(step.pointerPadding);
 
     // Call onStepEnter callback
@@ -160,18 +175,19 @@ class TourController {
         onNext: next,
         onPrevious: _currentStepIndex > 0 ? previous : null,
         onSkip: () => end(completed: false),
-        enableKeyboardNavigation: enableKeyboardNavigation,
+        enableKeyboardNavigation: enableKeyboardNavigation && step.enableInteraction,
         stepIndex: _currentStepIndex,
         totalSteps: steps.length,
       ),
     );
 
-    overlay.insert(_overlayEntry!);
+    overlayState.insert(_overlayEntry!);
   }
 
   void _announceForAccessibility(String message) {
     // Use SemanticsService to announce messages for screen readers
-    SemanticsService.announce(message, TextDirection.ltr);
+    final textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr;
+    SemanticsService.announce(message, textDirection);
   }
 }
 
@@ -237,8 +253,10 @@ class _TourOverlayState extends State<_TourOverlay>
           animation: _animation,
           builder: (context, child) => Spotlight(
             targetRect: widget.targetRect,
-            cornerRadius: widget.cornerRadius,
+        cornerRadius: widget.cornerRadius,
             animationValue: _animation.value,
+        overlayColor: widget.step.overlayColor,
+        blurRadius: widget.step.overlayBlurRadius,
           ),
         ),
         // Tooltip card

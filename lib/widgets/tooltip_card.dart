@@ -99,16 +99,16 @@ class _TooltipCardState extends State<TooltipCard>
     Offset begin;
     switch (widget.step.animation) {
       case StepAnimation.fadeSlideUp:
-        begin = const Offset(0, 50);
+        begin = const Offset(0, 0.1); // fractional for SlideTransition
         break;
       case StepAnimation.fadeSlideDown:
-        begin = const Offset(0, -50);
+        begin = const Offset(0, -0.1);
         break;
       case StepAnimation.fadeSlideLeft:
-        begin = const Offset(50, 0);
+        begin = const Offset(0.1, 0);
         break;
       case StepAnimation.fadeSlideRight:
-        begin = const Offset(-50, 0);
+        begin = const Offset(-0.1, 0);
         break;
       default:
         begin = Offset.zero;
@@ -367,9 +367,10 @@ class _TooltipCardState extends State<TooltipCard>
     final isRTL = Directionality.of(context) == TextDirection.rtl;
     final buttonLabel = widget.step.buttonLabel ?? (widget.step.isLast ? "Finish" : "Next");
 
+    final enableKeys = widget.enableKeyboardNavigation && widget.step.enableInteraction;
     return Focus(
-      autofocus: widget.enableKeyboardNavigation,
-      onKeyEvent: widget.enableKeyboardNavigation ? _handleKeyEvent : null,
+      autofocus: enableKeys,
+      onKeyEvent: enableKeys ? _handleKeyEvent : null,
       child: Semantics(
         label: widget.step.accessibilityLabel ?? '${widget.step.title}. ${widget.step.description}',
         hint: 'Step ${widget.stepIndex + 1} of ${widget.totalSteps}',
@@ -377,7 +378,7 @@ class _TooltipCardState extends State<TooltipCard>
           children: [
             // Invisible barrier for outside tap detection
             GestureDetector(
-              onTap: widget.onSkip,
+              onTap: widget.step.enableInteraction ? widget.onSkip : null,
               behavior: HitTestBehavior.translucent,
               child: Container(
                 width: double.infinity,
