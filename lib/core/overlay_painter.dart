@@ -17,9 +17,7 @@ class SpotlightOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = overlayColor.withOpacity(overlayColor.opacity * animationValue)
-      ..blendMode = BlendMode.dstOut;
+    if (animationValue <= 0) return;
 
     final overlayPaint = Paint()
       ..color = overlayColor.withOpacity(overlayColor.opacity * animationValue);
@@ -36,21 +34,39 @@ class SpotlightOverlayPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, overlayPaint);
     
     // Create spotlight cutout with animation
-    final animatedRect = Rect.lerp(
-      targetRect.center & Size.zero,
-      targetRect,
-      animationValue,
-    ) ?? targetRect;
+    final animatedRect = _calculateAnimatedRect();
     
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        animatedRect,
-        Radius.circular(cornerRadius),
-      ),
-      paint,
-    );
+    if (animatedRect.width > 0 && animatedRect.height > 0) {
+      final paint = Paint()
+        ..color = overlayColor.withOpacity(overlayColor.opacity * animationValue)
+        ..blendMode = BlendMode.dstOut;
+
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          animatedRect,
+          Radius.circular(cornerRadius * animationValue),
+        ),
+        paint,
+      );
+    }
     
     canvas.restore();
+  }
+
+  Rect _calculateAnimatedRect() {
+    if (animationValue >= 1.0) {
+      return targetRect;
+    }
+    
+    final center = targetRect.center;
+    final animatedWidth = targetRect.width * animationValue;
+    final animatedHeight = targetRect.height * animationValue;
+    
+    return Rect.fromCenter(
+      center: center,
+      width: animatedWidth,
+      height: animatedHeight,
+    );
   }
 
   @override
