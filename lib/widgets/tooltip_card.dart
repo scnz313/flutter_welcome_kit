@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -41,7 +43,8 @@ class _TooltipCardState extends State<TooltipCard>
 
   TooltipSide _actualSide = TooltipSide.bottom;
   Offset _tooltipPosition = Offset.zero;
-  final Size _tooltipSize = const Size(300, 180);
+  Size _tooltipSize = const Size(300, 180);
+  Timer? _autoAdvanceTimer;
 
   @override
   void initState() {
@@ -148,7 +151,8 @@ class _TooltipCardState extends State<TooltipCard>
 
   void _startAutoAdvanceTimer() {
     if (!widget.step.isLast && widget.step.enableInteraction) {
-      Future.delayed(widget.step.duration, () {
+      _autoAdvanceTimer?.cancel(); // Cancel any existing timer
+      _autoAdvanceTimer = Timer(widget.step.duration, () {
         if (mounted) {
           widget.onNext();
         }
@@ -157,10 +161,15 @@ class _TooltipCardState extends State<TooltipCard>
   }
 
   void _calculateOptimalPosition() {
+    if (!mounted) return;
+    
     final screenSize = MediaQuery.of(context).size;
     final isRTL = Directionality.of(context) == TextDirection.rtl;
     
-    // Smart positioning algorithm
+    // Calculate dynamic tooltip size based on content
+    _calculateTooltipSize();
+    
+    // Smart positioning algorithm with caching
     final positions = _calculateAllPossiblePositions(screenSize);
     final bestPosition = _selectBestPosition(positions, screenSize);
     
@@ -176,16 +185,45 @@ class _TooltipCardState extends State<TooltipCard>
     }
   }
 
+  void _calculateTooltipSize() {
+    // Calculate size based on text content and padding
+    final textPainter = TextPainter(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: widget.step.title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const TextSpan(text: '\n'),
+          TextSpan(
+            text: widget.step.description,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    
+    textPainter.layout(maxWidth: 280);
+    
+    final contentHeight = textPainter.size.height + 100; // Add padding and buttons space
+    final contentWidth = (textPainter.size.width + 80).clamp(280.0, 400.0);
+    
+    _tooltipSize = Size(contentWidth, contentHeight);
+  }
+
   List<_PositionOption> _calculateAllPossiblePositions(Size screenSize) {
     const margin = 16.0;
     final targetCenter = widget.targetRect.center;
+    final tooltipWidth = _tooltipSize.width;
+    final tooltipHeight = _tooltipSize.height;
     
     return [
       // Bottom positions
       _PositionOption(
         TooltipSide.bottom,
         Offset(
-          (targetCenter.dx - _tooltipSize.width / 2).clamp(margin, screenSize.width - _tooltipSize.width - margin),
+          (targetCenter.dx - tooltipWidth / 2).clamp(margin, screenSize.width - tooltipWidth - margin),
           widget.targetRect.bottom + 16,
         ),
       ),
@@ -199,7 +237,7 @@ class _TooltipCardState extends State<TooltipCard>
       _PositionOption(
         TooltipSide.bottomRight,
         Offset(
-          screenSize.width - _tooltipSize.width - margin,
+          screenSize.width - tooltipWidth - margin,
           widget.targetRect.bottom + 16,
         ),
       ),
@@ -208,22 +246,22 @@ class _TooltipCardState extends State<TooltipCard>
       _PositionOption(
         TooltipSide.top,
         Offset(
-          (targetCenter.dx - _tooltipSize.width / 2).clamp(margin, screenSize.width - _tooltipSize.width - margin),
-          widget.targetRect.top - _tooltipSize.height - 16,
+          (targetCenter.dx - tooltipWidth / 2).clamp(margin, screenSize.width - tooltipWidth - margin),
+          widget.targetRect.top - tooltipHeight - 16,
         ),
       ),
       _PositionOption(
         TooltipSide.topLeft,
         Offset(
           margin,
-          widget.targetRect.top - _tooltipSize.height - 16,
+          widget.targetRect.top - tooltipHeight - 16,
         ),
       ),
       _PositionOption(
         TooltipSide.topRight,
         Offset(
-          screenSize.width - _tooltipSize.width - margin,
-          widget.targetRect.top - _tooltipSize.height - 16,
+          screenSize.width - tooltipWidth - margin,
+          widget.targetRect.top - tooltipHeight - 16,
         ),
       ),
       
@@ -231,22 +269,22 @@ class _TooltipCardState extends State<TooltipCard>
       _PositionOption(
         TooltipSide.left,
         Offset(
-          widget.targetRect.left - _tooltipSize.width - 16,
-          (targetCenter.dy - _tooltipSize.height / 2).clamp(margin, screenSize.height - _tooltipSize.height - margin),
+          widget.targetRect.left - tooltipWidth - 16,
+          (targetCenter.dy - tooltipHeight / 2).clamp(margin, screenSize.height - tooltipHeight - margin),
         ),
       ),
       _PositionOption(
         TooltipSide.right,
         Offset(
           widget.targetRect.right + 16,
-          (targetCenter.dy - _tooltipSize.height / 2).clamp(margin, screenSize.height - _tooltipSize.height - margin),
+          (targetCenter.dy - tooltipHeight / 2).clamp(margin, screenSize.height - tooltipHeight - margin),
         ),
       ),
     ];
   }
 
   _PositionOption _selectBestPosition(List<_PositionOption> positions, Size screenSize) {
-    // Prioritize user preference if specified
+    // Prioritize user preference if specified and valid
     if (widget.step.preferredSide != null) {
       final preferred = positions.firstWhere(
         (p) => p.side == widget.step.preferredSide,
@@ -261,7 +299,7 @@ class _TooltipCardState extends State<TooltipCard>
     final validPositions = positions.where((p) => _isPositionValid(p.position, screenSize)).toList();
     
     if (validPositions.isNotEmpty) {
-      // Score positions based on visibility and distance from target
+      // Score positions based on visibility, distance from target, and reading direction
       validPositions.sort((a, b) => _scorePosition(a, screenSize).compareTo(_scorePosition(b, screenSize)));
       return validPositions.last; // Higher score is better
     }
@@ -293,13 +331,13 @@ class _TooltipCardState extends State<TooltipCard>
       score += 100;
     }
 
-    // Prefer positions closer to screen center
+    // Prefer positions closer to screen center for better visibility
     final screenCenter = screenSize.center(Offset.zero);
     final tooltipCenter = tooltipRect.center;
     final distanceFromCenter = (tooltipCenter - screenCenter).distance;
     score += (screenSize.width - distanceFromCenter) / screenSize.width * 50;
 
-    // Prefer bottom and right positions (reading direction)
+    // Prefer bottom and right positions (natural reading direction)
     switch (option.side) {
       case TooltipSide.bottom:
       case TooltipSide.bottomLeft:
@@ -319,43 +357,55 @@ class _TooltipCardState extends State<TooltipCard>
         break;
     }
 
+    // Bonus for positions that keep tooltip fully visible without scrolling
+    final isFullyVisible = _isPositionValid(option.position, screenSize);
+    if (isFullyVisible) {
+      score += 30;
+    }
+
     return score;
   }
 
   Offset _calculateArrowPosition() {
     final targetCenter = widget.targetRect.center;
     const arrowSize = 12.0;
+    const arrowOffset = 2.0;
 
     switch (_actualSide) {
       case TooltipSide.top:
       case TooltipSide.topLeft:
       case TooltipSide.topRight:
         return Offset(
-          (targetCenter.dx - _tooltipPosition.dx - arrowSize / 2).clamp(16.0, _tooltipSize.width - 32.0),
-          _tooltipSize.height - 2,
+          (targetCenter.dx - _tooltipPosition.dx - arrowSize / 2)
+              .clamp(16.0, _tooltipSize.width - 32.0),
+          _tooltipSize.height - arrowOffset,
         );
       case TooltipSide.bottom:
       case TooltipSide.bottomLeft:
       case TooltipSide.bottomRight:
         return Offset(
-          (targetCenter.dx - _tooltipPosition.dx - arrowSize / 2).clamp(16.0, _tooltipSize.width - 32.0),
-          -arrowSize + 2,
+          (targetCenter.dx - _tooltipPosition.dx - arrowSize / 2)
+              .clamp(16.0, _tooltipSize.width - 32.0),
+          -arrowSize + arrowOffset,
         );
       case TooltipSide.left:
         return Offset(
-          _tooltipSize.width - 2,
-          (targetCenter.dy - _tooltipPosition.dy - arrowSize / 2).clamp(16.0, _tooltipSize.height - 32.0),
+          _tooltipSize.width - arrowOffset,
+          (targetCenter.dy - _tooltipPosition.dy - arrowSize / 2)
+              .clamp(16.0, _tooltipSize.height - 32.0),
         );
       case TooltipSide.right:
         return Offset(
-          -arrowSize + 2,
-          (targetCenter.dy - _tooltipPosition.dy - arrowSize / 2).clamp(16.0, _tooltipSize.height - 32.0),
+          -arrowSize + arrowOffset,
+          (targetCenter.dy - _tooltipPosition.dy - arrowSize / 2)
+              .clamp(16.0, _tooltipSize.height - 32.0),
         );
     }
   }
 
   @override
   void dispose() {
+    _autoAdvanceTimer?.cancel(); // Cancel timer to prevent memory leaks
     _controller.dispose();
     _pulseController.dispose();
     super.dispose();
@@ -454,6 +504,7 @@ class _TooltipCardState extends State<TooltipCard>
           // Main card
           Container(
             width: _tooltipSize.width,
+            height: _tooltipSize.height,
             decoration: BoxDecoration(
               color: cardColor,
               borderRadius: BorderRadius.circular(16),
@@ -480,7 +531,11 @@ class _TooltipCardState extends State<TooltipCard>
                 children: [
                   _buildHeader(textColor),
                   const SizedBox(height: 12),
-                  _buildDescription(textColor),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: _buildDescription(textColor),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   _buildButtons(theme, buttonLabel, isRTL),
                 ],

@@ -15,6 +15,7 @@ class TourController {
   OverlayEntry? _overlayEntry;
   int _currentStepIndex = 0;
   bool _isActive = false;
+  bool _isDisposed = false;
 
   TourController({
     required this.context,
@@ -27,10 +28,37 @@ class TourController {
     if (steps.isEmpty) {
       throw ArgumentError('Tour steps cannot be empty');
     }
+    _validateSteps();
+  }
+
+  /// Validate all tour steps
+  void _validateSteps() {
+    for (int i = 0; i < steps.length; i++) {
+      final step = steps[i];
+      if (step.key.currentContext == null) {
+        debugPrint('Warning: Tour step ${i + 1} "${step.title}" has a GlobalKey with no attached widget');
+      }
+    }
+  }
+
+  /// Check if controller is disposed
+  bool get isDisposed => _isDisposed;
+
+  /// Dispose the controller and clean up resources
+  void dispose() {
+    if (_isDisposed) return;
+    
+    _isDisposed = true;
+    end();
   }
 
   /// Get current step
-  TourStep get currentStep => steps[_currentStepIndex];
+  TourStep get currentStep {
+    if (_isDisposed || _currentStepIndex >= steps.length) {
+      throw StateError('TourController is disposed or in invalid state');
+    }
+    return steps[_currentStepIndex];
+  }
   
   /// Check if tour is currently active
   bool get isActive => _isActive;
@@ -43,7 +71,24 @@ class TourController {
 
   /// Start the tour from the beginning
   void start() {
-    if (_isActive) return;
+    if (_isDisposed) {
+      debugPrint('Warning: Cannot start tour - controller is disposed');
+      return;
+    }
+    
+    if (_isActive) {
+      debugPrint('Warning: Tour is already active');
+      return;
+    }
+    
+    // Validate that all target widgets are still mounted
+    for (int i = 0; i < steps.length; i++) {
+      final step = steps[i];
+      if (step.key.currentContext?.mounted != true) {
+        debugPrint('Error: Target widget for step ${i + 1} "${step.title}" is not mounted');
+        return;
+      }
+    }
     
     _currentStepIndex = 0;
     _isActive = true;
@@ -55,10 +100,14 @@ class TourController {
 
   /// Move to next step
   void next() {
-    if (!_isActive) return;
+    if (_isDisposed || !_isActive) return;
     
     // Call onStepExit callback
-    currentStep.onStepExit?.call();
+    try {
+      currentStep.onStepExit?.call();
+    } catch (e) {
+      debugPrint('Error in onStepExit callback: $e');
+    }
     
     if (_currentStepIndex < steps.length - 1) {
       _currentStepIndex++;
@@ -75,10 +124,14 @@ class TourController {
 
   /// Move to previous step
   void previous() {
-    if (!_isActive || _currentStepIndex <= 0) return;
+    if (_isDisposed || !_isActive || _currentStepIndex <= 0) return;
     
     // Call onStepExit callback
-    currentStep.onStepExit?.call();
+    try {
+      currentStep.onStepExit?.call();
+    } catch (e) {
+      debugPrint('Error in onStepExit callback: $e');
+    }
     
     _currentStepIndex--;
     _showStep();
@@ -91,10 +144,14 @@ class TourController {
 
   /// Jump to specific step
   void goToStep(int index) {
-    if (!_isActive || index < 0 || index >= steps.length) return;
+    if (_isDisposed || !_isActive || index < 0 || index >= steps.length) return;
     
     // Call onStepExit callback for current step
-    currentStep.onStepExit?.call();
+    try {
+      currentStep.onStepExit?.call();
+    } catch (e) {
+      debugPrint('Error in onStepExit callback: $e');
+    }
     
     _currentStepIndex = index;
     _showStep();
@@ -107,27 +164,42 @@ class TourController {
 
   /// End the tour
   void end({bool completed = false}) {
-    if (!_isActive) return;
+    if (_isDisposed || !_isActive) return;
     
     // Call onStepExit callback for current step
-    currentStep.onStepExit?.call();
+    try {
+      currentStep.onStepExit?.call();
+    } catch (e) {
+      debugPrint('Error in onStepExit callback: $e');
+    }
     
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    // Safely remove overlay
+    try {
+      _overlayEntry?.remove();
+    } catch (e) {
+      debugPrint('Error removing overlay: $e');
+    } finally {
+      _overlayEntry = null;
+    }
+    
     _isActive = false;
     
     // Call appropriate completion callback
-    if (completed) {
-      onTourComplete?.call();
-      _announceForAccessibility('Tour completed');
-    } else {
-      onTourSkipped?.call();
-      _announceForAccessibility('Tour skipped');
+    try {
+      if (completed) {
+        onTourComplete?.call();
+        _announceForAccessibility('Tour completed');
+      } else {
+        onTourSkipped?.call();
+        _announceForAccessibility('Tour skipped');
+      }
+    } catch (e) {
+      debugPrint('Error in completion callback: $e');
     }
   }
 
   void _showStep() {
-    if (!_isActive) return;
+    if (_isDisposed || !_isActive) return;
 
     _overlayEntry?.remove();
 
@@ -138,7 +210,7 @@ class TourController {
     // Ensure overlay is available; if not, try again on next frame
     if (overlayState == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_isActive) _showStep();
+        if (!_isDisposed && _isActive) _showStep();
       });
       return;
     }
@@ -147,15 +219,19 @@ class TourController {
     if (renderObject is! RenderBox || !renderObject.attached || !renderObject.hasSize) {
       // If target isn't laid out yet, try again on next frame; otherwise skip/end
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_isActive) return;
+        if (_isDisposed || !_isActive) return;
+        
         final ro = step.key.currentContext?.findRenderObject();
         if (ro is RenderBox && ro.attached && ro.hasSize) {
           _showStep();
-        } else if (_currentStepIndex < steps.length - 1) {
-          _currentStepIndex++;
-          _showStep();
         } else {
-          end();
+          debugPrint('Warning: Target widget for step "${step.title}" is not properly laid out');
+          if (_currentStepIndex < steps.length - 1) {
+            _currentStepIndex++;
+            _showStep();
+          } else {
+            end();
+          }
         }
       });
       return;
@@ -165,7 +241,11 @@ class TourController {
     final paddedTarget = target.inflate(step.pointerPadding);
 
     // Call onStepEnter callback
-    step.onStepEnter?.call();
+    try {
+      step.onStepEnter?.call();
+    } catch (e) {
+      debugPrint('Error in onStepEnter callback: $e');
+    }
 
     _overlayEntry = OverlayEntry(
       builder: (context) => _TourOverlay(
@@ -181,13 +261,22 @@ class TourController {
       ),
     );
 
-    overlayState.insert(_overlayEntry!);
+    try {
+      overlayState.insert(_overlayEntry!);
+    } catch (e) {
+      debugPrint('Error inserting overlay: $e');
+      _overlayEntry = null;
+    }
   }
 
   void _announceForAccessibility(String message) {
-    // Use SemanticsService to announce messages for screen readers
-    final textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr;
-    SemanticsService.announce(message, textDirection);
+    try {
+      // Use SemanticsService to announce messages for screen readers
+      final textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr;
+      SemanticsService.announce(message, textDirection);
+    } catch (e) {
+      debugPrint('Error announcing for accessibility: $e');
+    }
   }
 }
 
@@ -235,12 +324,22 @@ class _TourOverlayState extends State<_TourOverlay>
       parent: _controller,
       curve: Curves.easeInOut,
     );
-    _controller.forward();
+    
+    // Start animation with error handling
+    try {
+      _controller.forward();
+    } catch (e) {
+      debugPrint('Error starting overlay animation: $e');
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    try {
+      _controller.dispose();
+    } catch (e) {
+      debugPrint('Error disposing overlay animation controller: $e');
+    }
     super.dispose();
   }
 
