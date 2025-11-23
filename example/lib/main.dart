@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_welcome_kit/flutter_welcome_kit.dart';
-import 'dart:math' as math;
-import 'dart:ui';
 
 void main() {
   runApp(const MyApp());
@@ -9,38 +7,28 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Welcome Kit Demo',
+      title: 'Flutter Welcome Kit',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.deepPurple,
-        scaffoldBackgroundColor: Colors.grey[50],
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+          seedColor: const Color(0xFF6366F1),
           brightness: Brightness.light,
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.deepPurple,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+        fontFamily: 'SF Pro Display',
       ),
       darkTheme: ThemeData(
-        primaryColor: Colors.deepPurple,
-        scaffoldBackgroundColor: Colors.grey[900],
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+          seedColor: const Color(0xFF6366F1),
           brightness: Brightness.dark,
         ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.grey[900],
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
       ),
       themeMode: ThemeMode.system,
       home: const HomePage(),
@@ -50,73 +38,30 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> {
   // Global keys for tour targets
-  final GlobalKey _logoKey = GlobalKey();
-  final GlobalKey _titleKey = GlobalKey();
+  final GlobalKey _heroKey = GlobalKey();
   final GlobalKey _searchKey = GlobalKey();
-  final GlobalKey _settingsKey = GlobalKey();
-  final GlobalKey _profileKey = GlobalKey();
-  final GlobalKey _cardKey = GlobalKey();
-  final GlobalKey _primaryButtonKey = GlobalKey();
-  final GlobalKey _secondaryButtonKey = GlobalKey();
-  final GlobalKey _bottomTextKey = GlobalKey();
+  final GlobalKey _notificationKey = GlobalKey();
+  final GlobalKey _feature1Key = GlobalKey();
+  final GlobalKey _feature2Key = GlobalKey();
+  final GlobalKey _feature3Key = GlobalKey();
+  final GlobalKey _ctaKey = GlobalKey();
   final GlobalKey _fabKey = GlobalKey();
-  final GlobalKey _progressKey = GlobalKey();
 
   TourController? _tourController;
-  late AnimationController _textAnimationController;
-  late AnimationController _cardAnimationController;
-  late Animation<double> _textAnimation;
-  late Animation<double> _floatAnimation;
-  late Animation<double> _glowAnimation;
-  late Animation<double> _cardScaleAnimation;
-  late Animation<double> _cardRotationAnimation;
-
+  int _currentStep = 0;
   bool _tourCompleted = false;
-  int _completedSteps = 0;
 
   @override
   void initState() {
     super.initState();
-    _setupAnimations();
     WidgetsBinding.instance.addPostFrameCallback((_) => _setupTour());
-  }
-
-  void _setupAnimations() {
-    _textAnimationController = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _cardAnimationController = AnimationController(
-      duration: const Duration(seconds: 6),
-      vsync: this,
-    )..repeat();
-
-    _textAnimation = Tween<double>(begin: 0, end: math.pi * 2).animate(
-      CurvedAnimation(parent: _textAnimationController, curve: Curves.easeInOut),
-    );
-
-    _floatAnimation = Tween<double>(begin: -15, end: 15).animate(
-      CurvedAnimation(parent: _textAnimationController, curve: Curves.easeInOut),
-    );
-
-    _glowAnimation = Tween<double>(begin: 0, end: 8).animate(
-      CurvedAnimation(parent: _textAnimationController, curve: Curves.easeInOut),
-    );
-
-    _cardScaleAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
-      CurvedAnimation(parent: _cardAnimationController, curve: Curves.easeInOut),
-    );
-
-    _cardRotationAnimation = Tween<double>(begin: -0.01, end: 0.01).animate(
-      CurvedAnimation(parent: _cardAnimationController, curve: Curves.easeInOut),
-    );
   }
 
   void _setupTour() {
@@ -127,708 +72,699 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         setState(() {
           _tourCompleted = true;
         });
-        _showCompletionDialog();
+        _showCompletionSnackbar();
       },
       onTourSkipped: () {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tour skipped. You can restart it anytime!')),
+          SnackBar(
+            content: const Text('Tour skipped - Restart anytime!'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         );
       },
       steps: [
         TourStep(
-          key: _logoKey,
-          title: "👋 Welcome to Flutter Welcome Kit!",
-          description: "Let's take a quick interactive tour to explore all the amazing features this package offers.",
-          backgroundColor: Colors.blue.shade50,
-          textColor: Colors.blue.shade800,
+          key: _heroKey,
+          title: "Welcome! 👋",
+          description: "Let's take a quick tour of Flutter Welcome Kit - your modern onboarding solution.",
+          backgroundColor: const Color(0xFF6366F1),
+          textColor: Colors.white,
           animation: StepAnimation.fadeSlideDown,
-          preferredSide: TooltipSide.bottomRight,
-          duration: const Duration(seconds: 5),
-          accessibilityLabel: "Welcome step - Introduction to the tour",
-          onStepEnter: () => _updateProgress(0),
-        ),
-        TourStep(
-          key: _titleKey,
-          title: "🎯 Smart Positioning",
-          description: "Notice how this tooltip automatically positioned itself optimally? The kit uses intelligent algorithms to avoid overlaps and screen edges.",
-          backgroundColor: Colors.purple.shade50,
-          textColor: Colors.purple.shade800,
-          animation: StepAnimation.bounce,
           preferredSide: TooltipSide.bottom,
-          onStepEnter: () => _updateProgress(1),
+          onStepEnter: () => _updateStep(0),
         ),
         TourStep(
           key: _searchKey,
-          title: "🔍 Multiple Animations",
-          description: "Each step can have different animations. This one uses a slide effect from the left side.",
-          backgroundColor: Colors.orange.shade50,
-          textColor: Colors.orange.shade800,
+          title: "Smart Positioning",
+          description: "Tooltips automatically position themselves to avoid screen edges and overlaps.",
+          backgroundColor: const Color(0xFF8B5CF6),
+          textColor: Colors.white,
           animation: StepAnimation.fadeSlideLeft,
           preferredSide: TooltipSide.bottomLeft,
-          onStepEnter: () => _updateProgress(2),
+          onStepEnter: () => _updateStep(1),
         ),
         TourStep(
-          key: _settingsKey,
-          title: "⚙️ Customizable Design",
-          description: "Every aspect is customizable - colors, animations, positioning, and more. This step showcases the scale animation.",
-          backgroundColor: Colors.green.shade50,
-          textColor: Colors.green.shade800,
+          key: _notificationKey,
+          title: "Beautiful Animations",
+          description: "Choose from 8 different smooth animations to match your app's style.",
+          backgroundColor: const Color(0xFFEC4899),
+          textColor: Colors.white,
           animation: StepAnimation.scale,
           preferredSide: TooltipSide.left,
-          pointerPadding: 12.0,
-          pointerRadius: 16.0,
-          onStepEnter: () => _updateProgress(3),
+          onStepEnter: () => _updateStep(2),
         ),
         TourStep(
-          key: _profileKey,
-          title: "👤 Accessibility First",
-          description: "Full screen reader support, keyboard navigation (try arrow keys!), and RTL language support included.",
-          backgroundColor: Colors.indigo.shade50,
-          textColor: Colors.indigo.shade800,
-          animation: StepAnimation.rotate,
-          accessibilityLabel: "Accessibility features explanation",
-          onStepEnter: () => _updateProgress(4),
-        ),
-        TourStep(
-          key: _cardKey,
-          title: "🎨 Beautiful Design",
-          description: "Modern Material Design 3 styling with smooth shadows, proper contrast ratios, and responsive layouts.",
-          backgroundColor: Colors.teal.shade50,
-          textColor: Colors.teal.shade800,
+          key: _feature1Key,
+          title: "Fully Responsive",
+          description: "Works perfectly on all screen sizes - mobile, tablet, and desktop.",
+          backgroundColor: const Color(0xFF10B981),
+          textColor: Colors.white,
           animation: StepAnimation.fadeSlideUp,
           preferredSide: TooltipSide.top,
-          onStepEnter: () => _updateProgress(5),
+          onStepEnter: () => _updateStep(3),
         ),
         TourStep(
-          key: _primaryButtonKey,
-          title: "🚀 Easy Integration",
-          description: "Just add global keys to your widgets and define tour steps. No complex setup required!",
-          backgroundColor: Colors.pink.shade50,
-          textColor: Colors.pink.shade800,
+          key: _feature2Key,
+          title: "Easy Integration",
+          description: "Just add global keys to your widgets and define tour steps. That's it!",
+          backgroundColor: const Color(0xFFF59E0B),
+          textColor: Colors.white,
           animation: StepAnimation.bounce,
-          onStepEnter: () => _updateProgress(6),
+          onStepEnter: () => _updateStep(4),
         ),
         TourStep(
-          key: _secondaryButtonKey,
-          title: "🎮 Interactive Controls",
-          description: "Users can navigate with buttons, keyboard shortcuts, or tap outside to skip. Full control at their fingertips.",
-          backgroundColor: Colors.amber.shade50,
-          textColor: Colors.amber.shade800,
+          key: _feature3Key,
+          title: "Accessibility First",
+          description: "Built with screen readers, keyboard navigation, and RTL support in mind.",
+          backgroundColor: const Color(0xFF3B82F6),
+          textColor: Colors.white,
           animation: StepAnimation.fadeSlideRight,
-          onStepEnter: () => _updateProgress(7),
+          onStepEnter: () => _updateStep(5),
         ),
         TourStep(
-          key: _progressKey,
-          title: "📊 Progress Tracking",
-          description: "Built-in step tracking with callbacks for analytics. Monitor user engagement and tour completion rates.",
-          backgroundColor: Colors.cyan.shade50,
-          textColor: Colors.cyan.shade800,
-          animation: StepAnimation.scale,
-          preferredSide: TooltipSide.top,
-          onStepEnter: () => _updateProgress(8),
+          key: _ctaKey,
+          title: "Get Started Today",
+          description: "Add it to your project and create amazing onboarding experiences in minutes!",
+          backgroundColor: const Color(0xFF6366F1),
+          textColor: Colors.white,
+          animation: StepAnimation.bounce,
+          onStepEnter: () => _updateStep(6),
         ),
         TourStep(
           key: _fabKey,
-          title: "🎉 Tour Complete!",
-          description: "You've experienced all the key features! Ready to integrate Flutter Welcome Kit into your app?",
-          backgroundColor: Colors.deepPurple.shade50,
-          textColor: Colors.deepPurple.shade800,
-          animation: StepAnimation.bounce,
+          title: "Tour Complete! 🎉",
+          description: "You're ready to integrate Flutter Welcome Kit into your app. Happy coding!",
+          backgroundColor: const Color(0xFF059669),
+          textColor: Colors.white,
+          animation: StepAnimation.scale,
           isLast: true,
-          buttonLabel: "Awesome!",
+          buttonLabel: "Done",
           preferredSide: TooltipSide.topLeft,
-          onStepEnter: () => _updateProgress(9),
+          onStepEnter: () => _updateStep(7),
         ),
       ],
     );
   }
 
-  void _updateProgress(int step) {
+  void _updateStep(int step) {
     setState(() {
-      _completedSteps = step + 1;
+      _currentStep = step + 1;
     });
   }
 
-  void _showCompletionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
+  void _showCompletionSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
           children: [
-            Icon(Icons.celebration, color: Colors.deepPurple),
-            SizedBox(width: 8),
-            Text('Congratulations!'),
+            Icon(Icons.celebration_rounded, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text('Tour completed! 🎉')),
           ],
         ),
-        content: Text(
-          'You\'ve completed the Flutter Welcome Kit tour! 🎉\n\n'
-          'Check out the GitHub repository for documentation, examples, and contribution guidelines.',
+        backgroundColor: const Color(0xFF059669),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        action: SnackBarAction(
+          label: 'Restart',
+          textColor: Colors.white,
+          onPressed: () {
+            setState(() {
+              _tourCompleted = false;
+              _currentStep = 0;
+            });
+            _tourController?.start();
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _restartTour();
-            },
-            child: Text('Restart Tour'),
-          ),
-        ],
       ),
     );
-  }
-
-  void _restartTour() {
-    setState(() {
-      _tourCompleted = false;
-      _completedSteps = 0;
-    });
-    _tourController?.start();
-  }
-
-  @override
-  void dispose() {
-    _textAnimationController.dispose();
-    _cardAnimationController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 900;
+    final isMediumScreen = screenWidth > 600 && screenWidth <= 900;
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          key: _logoKey,
-          icon: const Icon(Icons.menu),
-          onPressed: () {},
-        ),
-        title: Text(
-          'Flutter Welcome Kit Demo',
-          key: _titleKey,
-        ),
-        actions: [
-          IconButton(
-            key: _searchKey,
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
-          IconButton(
-            key: _settingsKey,
-            icon: const Icon(Icons.settings),
-            onPressed: () {},
-          ),
-          IconButton(
-            key: _profileKey,
-            icon: const Icon(Icons.account_circle),
-            onPressed: () {},
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: CustomScrollView(
+        slivers: [
+          _buildAppBar(theme, isDark),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                _buildHeroSection(theme, isDark, screenWidth),
+                _buildProgressSection(theme, isDark),
+                _buildFeaturesSection(theme, isDark, isLargeScreen, isMediumScreen),
+                _buildCTASection(theme, isDark),
+                const SizedBox(height: 100),
+              ],
+            ),
           ),
         ],
       ),
-      body: Container(
+      floatingActionButton: _buildFAB(theme),
+    );
+  }
+
+  Widget _buildAppBar(ThemeData theme, bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 0,
+      floating: true,
+      pinned: false,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      flexibleSpace: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [Colors.grey[900]!, Colors.grey[800]!, Colors.grey[850]!]
-                : [Colors.grey[50]!, Colors.white, Colors.grey[100]!],
+          color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+              width: 1,
+            ),
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Progress indicator
-              _buildProgressIndicator(theme),
-              const SizedBox(height: 24),
-
-              // Main feature card
-              _buildMainCard(theme, isDark),
-              const SizedBox(height: 32),
-
-              // Action buttons
-              _buildActionButtons(theme),
-              const SizedBox(height: 32),
-
-              // Feature highlights
-              _buildFeatureGrid(theme),
-              const SizedBox(height: 32),
-
-              // Bottom information
-              _buildBottomInfo(theme),
-            ],
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.tour_rounded, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Welcome Kit',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    _buildIconButton(
+                      icon: Icons.search_rounded,
+                      globalKey: _searchKey,
+                      theme: theme,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildIconButton(
+                      icon: Icons.notifications_rounded,
+                      globalKey: _notificationKey,
+                      theme: theme,
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: _fabKey,
-        onPressed: (_tourController?.isActive ?? false) ? null : () => _tourController?.start(),
-        icon: Icon((_tourController?.isActive ?? false) ? Icons.tour : Icons.play_arrow),
-        label: Text((_tourController?.isActive ?? false) ? 'Tour Active' : 'Start Tour'),
-        backgroundColor: (_tourController?.isActive ?? false) ? Colors.grey : theme.primaryColor,
       ),
     );
   }
 
-  Widget _buildProgressIndicator(ThemeData theme) {
+  Widget _buildIconButton({
+    required IconData icon,
+    required GlobalKey globalKey,
+    required ThemeData theme,
+    required bool isDark,
+  }) {
     return Container(
-      key: _progressKey,
-      padding: const EdgeInsets.all(16),
+      key: globalKey,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 22),
+        onPressed: () {},
+        color: theme.colorScheme.onSurface,
+      ),
+    );
+  }
+
+  Widget _buildHeroSection(ThemeData theme, bool isDark, double screenWidth) {
+    final isSmallScreen = screenWidth < 600;
+
+    return Container(
+      key: _heroKey,
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth > 1200 ? 80 : (isSmallScreen ? 24 : 40),
+        vertical: isSmallScreen ? 48 : 80,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  const Color(0xFF0A0A0A),
+                  const Color(0xFF1A1A2E).withOpacity(0.5),
+                ]
+              : [
+                  Colors.white,
+                  const Color(0xFFF3F4F6),
+                ],
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Tour Progress',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          // Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF6366F1).withOpacity(0.1),
+                  const Color(0xFF8B5CF6).withOpacity(0.1),
+                ],
               ),
-              Text(
-                '$_completedSteps / 10',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: const Color(0xFF6366F1).withOpacity(0.2),
+                width: 1,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: _completedSteps / 10,
-            backgroundColor: theme.colorScheme.surfaceVariant,
-            valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
-          ),
-          if (_tourCompleted) ...[
-            const SizedBox(height: 8),
-            Row(
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 16),
-                const SizedBox(width: 4),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF6366F1),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  'Tour completed successfully!',
+                  'Modern • Minimal • Responsive',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.green,
-                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF6366F1),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
             ),
-          ],
+          ),
+          SizedBox(height: isSmallScreen ? 24 : 32),
+
+          // Hero Title
+          Text(
+            'Beautiful Onboarding\nMade Simple',
+            style: theme.textTheme.displaySmall?.copyWith(
+              fontSize: isSmallScreen ? 32 : (screenWidth > 1200 ? 56 : 48),
+              fontWeight: FontWeight.w800,
+              height: 1.1,
+              letterSpacing: -1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: isSmallScreen ? 16 : 24),
+
+          // Subtitle
+          Container(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Text(
+              'Create stunning, interactive tours with smart positioning, smooth animations, and accessibility-first design.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontSize: isSmallScreen ? 16 : 18,
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 32 : 40),
+
+          // CTA Button
+          FilledButton.icon(
+            onPressed: () => _tourController?.start(),
+            icon: const Icon(Icons.play_arrow_rounded, size: 20),
+            label: const Text('Start Interactive Tour'),
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 24 : 32,
+                vertical: isSmallScreen ? 16 : 20,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: const Color(0xFF6366F1),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 16 : 20),
+
+          // Stats Row
+          Wrap(
+            spacing: 32,
+            runSpacing: 16,
+            alignment: WrapAlignment.center,
+            children: [
+              _buildStat('8+', 'Animations', theme),
+              _buildStat('100%', 'Responsive', theme),
+              _buildStat('A11y', 'Built-in', theme),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMainCard(ThemeData theme, bool isDark) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_cardScaleAnimation, _cardRotationAnimation]),
-      builder: (context, child) => Transform.scale(
-        scale: _cardScaleAnimation.value,
-        child: Transform.rotate(
-          angle: _cardRotationAnimation.value,
-          child: Card(
-            key: _cardKey,
-            elevation: 12,
-            shadowColor: Colors.black.withOpacity(0.3),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isDark
-                          ? [
-                              Colors.grey[850]!.withOpacity(0.9),
-                              Colors.grey[900]!.withOpacity(0.9),
-                            ]
-                          : [
-                              Colors.white.withOpacity(0.9),
-                              Colors.grey[50]!.withOpacity(0.9),
-                            ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      _buildAnimatedTitle(theme),
-                      const SizedBox(height: 24),
-                      _buildDescription(theme),
-                      const SizedBox(height: 24),
-                      _buildFeatureIcons(theme),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnimatedTitle(ThemeData theme) {
-    return AnimatedBuilder(
-      animation: _textAnimationController,
-      builder: (context, child) => Transform(
-        transform: Matrix4.identity()
-          ..setEntry(3, 2, 0.001)
-          ..rotateX(_textAnimation.value * 0.02)
-          ..translate(0.0, _floatAnimation.value, 0.0),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.primaryColor.withOpacity(0.3),
-                    blurRadius: _glowAnimation.value * 2,
-                    spreadRadius: _glowAnimation.value,
-                  ),
-                ],
-              ),
-              child: ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  colors: [
-                    theme.primaryColor,
-                    theme.primaryColor.withOpacity(0.8),
-                    theme.colorScheme.secondary,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ).createShader(bounds),
-                child: Text(
-                  'Flutter Welcome Kit',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Beautiful Onboarding Tours Made Simple',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDescription(ThemeData theme) {
-    return Text(
-      'Create stunning, interactive onboarding experiences with smart positioning, '
-      'smooth animations, and accessibility-first design. Perfect for guiding users '
-      'through your app\'s features.',
-      style: theme.textTheme.bodyLarge?.copyWith(
-        height: 1.6,
-        color: theme.colorScheme.onSurface.withOpacity(0.8),
-      ),
-      textAlign: TextAlign.center,
-    );
-  }
-
-  Widget _buildFeatureIcons(ThemeData theme) {
-    final features = [
-      (Icons.auto_awesome, 'Smart\nPositioning'),
-      (Icons.animation, 'Smooth\nAnimations'),
-      (Icons.accessibility, 'Accessibility\nFirst'),
-      (Icons.palette, 'Customizable\nDesign'),
-    ];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: features.map((feature) {
-        return Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                feature.$1,
-                color: theme.primaryColor,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              feature.$2,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildActionButtons(ThemeData theme) {
-    return Row(
+  Widget _buildStat(String value, String label, ThemeData theme) {
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            key: _primaryButtonKey,
-            onPressed: () => _tourController.start(),
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('Start Interactive Tour'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+        Text(
+          value,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF6366F1),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: OutlinedButton.icon(
-            key: _secondaryButtonKey,
-            onPressed: _showFeatureDialog,
-            icon: const Icon(Icons.info_outline),
-            label: const Text('Learn More'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFeatureGrid(ThemeData theme) {
-    final features = [
-      _FeatureCard(
-        icon: Icons.speed,
-        title: 'Lightning Fast',
-        description: 'Optimized performance with smooth 60fps animations',
-        color: Colors.orange,
-      ),
-      _FeatureCard(
-        icon: Icons.devices,
-        title: 'Cross Platform',
-        description: 'Works perfectly on iOS, Android, Web, and Desktop',
-        color: Colors.blue,
-      ),
-      _FeatureCard(
-        icon: Icons.code,
-        title: 'Developer Friendly',
-        description: 'Simple API with comprehensive documentation',
-        color: Colors.green,
-      ),
-      _FeatureCard(
-        icon: Icons.security,
-        title: 'Production Ready',
-        description: 'Battle-tested with proper error handling',
-        color: Colors.red,
-      ),
-    ];
+  Widget _buildProgressSection(ThemeData theme, bool isDark) {
+    if (_currentStep == 0 && !_tourCompleted) return const SizedBox.shrink();
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.2,
-      ),
-      itemCount: features.length,
-      itemBuilder: (context, index) => _buildFeatureCard(features[index], theme),
-    );
-  }
-
-  Widget _buildFeatureCard(_FeatureCard feature, ThemeData theme) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: feature.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                feature.icon,
-                color: feature.color,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              feature.title,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              feature.description,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomInfo(ThemeData theme) {
     return Container(
-      key: _bottomTextKey,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: isDark ? Colors.white.withOpacity(0.03) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
         ),
       ),
       child: Column(
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _tourCompleted ? 'Tour Completed! 🎉' : 'Tour Progress',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                '$_currentStep / 8',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF6366F1),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(100),
+            child: LinearProgressIndicator(
+              value: _currentStep / 8,
+              minHeight: 8,
+              backgroundColor: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturesSection(
+    ThemeData theme,
+    bool isDark,
+    bool isLargeScreen,
+    bool isMediumScreen,
+  ) {
+    final features = [
+      _Feature(
+        icon: Icons.auto_awesome_rounded,
+        title: 'Smart Positioning',
+        description: 'Tooltips automatically adapt to avoid screen edges and overlaps.',
+        color: const Color(0xFF6366F1),
+        globalKey: _feature1Key,
+      ),
+      _Feature(
+        icon: Icons.animation,
+        title: 'Smooth Animations',
+        description: 'Choose from 8 beautiful animations with 60fps performance.',
+        color: const Color(0xFF8B5CF6),
+        globalKey: _feature2Key,
+      ),
+      _Feature(
+        icon: Icons.accessibility_rounded,
+        title: 'Accessibility First',
+        description: 'Screen readers, keyboard navigation, and RTL support included.',
+        color: const Color(0xFFEC4899),
+        globalKey: _feature3Key,
+      ),
+      _Feature(
+        icon: Icons.palette_rounded,
+        title: 'Fully Customizable',
+        description: 'Control every aspect - colors, timing, positioning, and more.',
+        color: const Color(0xFF10B981),
+        globalKey: null,
+      ),
+      _Feature(
+        icon: Icons.devices_rounded,
+        title: 'Cross Platform',
+        description: 'Works seamlessly on iOS, Android, Web, and Desktop.',
+        color: const Color(0xFFF59E0B),
+        globalKey: null,
+      ),
+      _Feature(
+        icon: Icons.code_rounded,
+        title: 'Developer Friendly',
+        description: 'Simple API with comprehensive docs and examples.',
+        color: const Color(0xFF3B82F6),
+        globalKey: null,
+      ),
+    ];
+
+    final crossAxisCount = isLargeScreen ? 3 : (isMediumScreen ? 2 : 1);
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
           Text(
-            '🚀 Ready to Get Started?',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+            'Why Choose Welcome Kit?',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 40),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: isLargeScreen ? 1.3 : (isMediumScreen ? 1.2 : 1.5),
+            ),
+            itemCount: features.length,
+            itemBuilder: (context, index) => _buildFeatureCard(features[index], theme, isDark),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard(_Feature feature, ThemeData theme, bool isDark) {
+    return Container(
+      key: feature.globalKey,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.03) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: feature.color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              feature.icon,
+              color: feature.color,
+              size: 32,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            feature.title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            feature.description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCTASection(ThemeData theme, bool isDark) {
+    return Container(
+      key: _ctaKey,
+      margin: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.rocket_launch_rounded,
+            color: Colors.white,
+            size: 48,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Ready to Get Started?',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'Add Flutter Welcome Kit to your pubspec.yaml and start creating amazing onboarding experiences in minutes!',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
+            'Add Flutter Welcome Kit to your project and start creating amazing experiences.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white.withOpacity(0.9),
+              height: 1.6,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 32),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.black.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+              ),
             ),
-            child: Text(
+            child: SelectableText(
               'dependencies:\n  flutter_welcome_kit: ^1.0.0',
-              style: theme.textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontFamily: 'monospace',
-                color: theme.colorScheme.onSurfaceVariant,
+                color: Colors.white,
+                height: 1.6,
               ),
               textAlign: TextAlign.center,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showFeatureDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('🎯 Key Features'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildFeatureItem('✨ Smart Auto-positioning'),
-              _buildFeatureItem('🎨 8 Different Animation Types'),
-              _buildFeatureItem('🎯 Precise Widget Targeting'),
-              _buildFeatureItem('⌨️ Full Keyboard Navigation'),
-              _buildFeatureItem('♿ Complete Accessibility Support'),
-              _buildFeatureItem('🌍 RTL Language Support'),
-              _buildFeatureItem('📱 Responsive Design'),
-              _buildFeatureItem('🎮 Interactive Controls'),
-              _buildFeatureItem('📊 Progress Tracking'),
-              _buildFeatureItem('🔧 Highly Customizable'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _tourController.start();
-            },
-            child: const Text('Try It Now'),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.description_rounded),
+            label: const Text('View Documentation'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF6366F1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(text),
+  Widget _buildFAB(ThemeData theme) {
+    final isActive = _tourController?.isActive ?? false;
+
+    return FloatingActionButton.extended(
+      key: _fabKey,
+      onPressed: isActive ? null : () => _tourController?.start(),
+      icon: Icon(isActive ? Icons.tour_rounded : Icons.play_arrow_rounded),
+      label: Text(isActive ? 'Tour Active' : 'Start Tour'),
+      backgroundColor: isActive ? Colors.grey : const Color(0xFF6366F1),
+      foregroundColor: Colors.white,
+      elevation: 4,
+      extendedPadding: const EdgeInsets.symmetric(horizontal: 24),
     );
   }
 }
 
-class _FeatureCard {
+class _Feature {
   final IconData icon;
   final String title;
   final String description;
   final Color color;
+  final GlobalKey? globalKey;
 
-  _FeatureCard({
+  _Feature({
     required this.icon,
     required this.title,
     required this.description,
     required this.color,
+    this.globalKey,
   });
 }
