@@ -8,15 +8,17 @@ class Spotlight extends StatelessWidget {
   final double cornerRadius;
   final double animationValue;
   final double blurRadius;
+  final BoxShape shape;
 
   const Spotlight({
     super.key,
     required this.targetRect,
-    this.padding = 8.0,
+    this.padding = 0.0,
     this.overlayColor = const Color.fromRGBO(0, 0, 0, 0.7),
     this.cornerRadius = 12.0,
     this.animationValue = 1.0,
     this.blurRadius = 0.0,
+    this.shape = BoxShape.rectangle,
   });
 
   @override
@@ -32,6 +34,7 @@ class Spotlight extends StatelessWidget {
           animationValue: animationValue,
           cornerRadius: cornerRadius,
           blurRadius: blurRadius,
+          shape: shape,
         ),
       ),
     );

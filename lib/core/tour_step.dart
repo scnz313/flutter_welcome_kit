@@ -43,11 +43,17 @@ class TourStep {
   final String? accessibilityLabel;
   final VoidCallback? onStepEnter;
   final VoidCallback? onStepExit;
+  final Duration? delay;
+  final Widget? content;
+  final BoxShape shape;
+  final bool showArrow;
+  final double? width;
+  final double? height;
 
   const TourStep({
     required this.key,
-    required this.title,
-    required this.description,
+    this.title = '', // Made optional if content is provided
+    this.description = '', // Made optional if content is provided
     this.backgroundColor = Colors.white,
     this.overlayColor = const Color.fromRGBO(0, 0, 0, 0.7),
     this.overlayBlurRadius = 0.0,
@@ -63,5 +69,12 @@ class TourStep {
     this.accessibilityLabel,
     this.onStepEnter,
     this.onStepExit,
-  });
+    this.delay,
+    this.content,
+    this.shape = BoxShape.rectangle,
+    this.showArrow = true,
+    this.width,
+    this.height,
+  }) : assert(content != null || (title != '' || description != ''), 
+       'Either content must be provided or title/description must be non-empty');
 }
