@@ -130,15 +130,29 @@ class TourController {
     if (!_isActive) return;
 
     _overlayEntry?.remove();
+    _overlayEntry = null;
 
     final step = steps[_currentStepIndex];
+
+    if (step.delay != null) {
+      Future.delayed(step.delay!, () {
+        if (_isActive && steps[_currentStepIndex] == step) {
+          _mountStepOverlay(step);
+        }
+      });
+    } else {
+      _mountStepOverlay(step);
+    }
+  }
+
+  void _mountStepOverlay(TourStep step) {
     final renderObject = step.key.currentContext?.findRenderObject();
     final overlayState = Overlay.of(context, rootOverlay: true);
 
     // Ensure overlay is available; if not, try again on next frame
     if (overlayState == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_isActive) _showStep();
+        if (_isActive && steps[_currentStepIndex] == step) _mountStepOverlay(step);
       });
       return;
     }
@@ -150,7 +164,7 @@ class TourController {
         if (!_isActive) return;
         final ro = step.key.currentContext?.findRenderObject();
         if (ro is RenderBox && ro.attached && ro.hasSize) {
-          _showStep();
+          _mountStepOverlay(step);
         } else if (_currentStepIndex < steps.length - 1) {
           _currentStepIndex++;
           _showStep();
@@ -253,10 +267,11 @@ class _TourOverlayState extends State<_TourOverlay>
           animation: _animation,
           builder: (context, child) => Spotlight(
             targetRect: widget.targetRect,
-        cornerRadius: widget.cornerRadius,
+            cornerRadius: widget.cornerRadius,
             animationValue: _animation.value,
-        overlayColor: widget.step.overlayColor,
-        blurRadius: widget.step.overlayBlurRadius,
+            overlayColor: widget.step.overlayColor,
+            blurRadius: widget.step.overlayBlurRadius,
+            shape: widget.step.shape,
           ),
         ),
         // Tooltip card

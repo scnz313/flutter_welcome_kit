@@ -6,6 +6,7 @@ class SpotlightOverlayPainter extends CustomPainter {
   final double animationValue;
   final double cornerRadius;
   final double blurRadius;
+  final BoxShape shape;
 
   SpotlightOverlayPainter({
     required this.targetRect,
@@ -13,6 +14,7 @@ class SpotlightOverlayPainter extends CustomPainter {
     this.animationValue = 1.0,
     this.cornerRadius = 12.0,
     this.blurRadius = 0.0,
+    this.shape = BoxShape.rectangle,
   });
 
   @override
@@ -42,13 +44,17 @@ class SpotlightOverlayPainter extends CustomPainter {
       animationValue,
     ) ?? targetRect;
     
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        animatedRect,
-        Radius.circular(cornerRadius),
-      ),
-      paint,
-    );
+    if (shape == BoxShape.circle) {
+      canvas.drawOval(animatedRect, paint);
+    } else {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          animatedRect,
+          Radius.circular(cornerRadius),
+        ),
+        paint,
+      );
+    }
     
     canvas.restore();
   }
@@ -59,6 +65,7 @@ class SpotlightOverlayPainter extends CustomPainter {
            oldDelegate.overlayColor != overlayColor ||
            oldDelegate.animationValue != animationValue ||
            oldDelegate.cornerRadius != cornerRadius ||
-           oldDelegate.blurRadius != blurRadius;
+           oldDelegate.blurRadius != blurRadius ||
+           oldDelegate.shape != shape;
   }
 }
