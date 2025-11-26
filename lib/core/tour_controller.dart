@@ -134,15 +134,41 @@ class TourController {
 
     final step = steps[_currentStepIndex];
 
-    if (step.delay != null) {
-      Future.delayed(step.delay!, () {
-        if (_isActive && steps[_currentStepIndex] == step) {
-          _mountStepOverlay(step);
-        }
-      });
-    } else {
-      _mountStepOverlay(step);
+    void mount() {
+      if (step.delay != null) {
+        Future.delayed(step.delay!, () {
+          if (_isActive && steps[_currentStepIndex] == step) {
+            _mountStepOverlay(step);
+          }
+        });
+      } else {
+        _mountStepOverlay(step);
+      }
     }
+
+    if (step.scrollToTarget) {
+      final context = step.key.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.5,
+        ).then((_) {
+          if (_isActive && steps[_currentStepIndex] == step) {
+            mount();
+          }
+        }).catchError((error) {
+          debugPrint('TourController: Failed to scroll to target: $error');
+          if (_isActive && steps[_currentStepIndex] == step) {
+            mount();
+          }
+        });
+        return;
+      }
+    }
+
+    mount();
   }
 
   void _mountStepOverlay(TourStep step) {
