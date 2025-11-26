@@ -49,6 +49,7 @@ class TourStep {
   final bool showArrow;
   final double? width;
   final double? height;
+  final bool scrollToTarget;
 
   const TourStep({
     required this.key,
@@ -75,6 +76,7 @@ class TourStep {
     this.showArrow = true,
     this.width,
     this.height,
+    this.scrollToTarget = true,
   }) : assert(content != null || (title != '' || description != ''), 
        'Either content must be provided or title/description must be non-empty');
 }

@@ -18,6 +18,7 @@ void main() {
       expect(step.backgroundColor, equals(Colors.white));
       expect(step.animation, equals(StepAnimation.fadeSlideUp));
       expect(step.isLast, equals(false));
+      expect(step.scrollToTarget, equals(true));
     });
 
     test('should create TourStep with custom parameters', () {
@@ -35,6 +36,7 @@ void main() {
         textColor: Colors.white,
         pointerPadding: 12.0,
         pointerRadius: 16.0,
+        scrollToTarget: false,
       );
 
       expect(step.backgroundColor, equals(Colors.blue));
@@ -46,6 +48,7 @@ void main() {
       expect(step.pointerRadius, equals(16.0));
       expect(step.overlayColor.opacity, closeTo(0.6, 0.01));
       expect(step.overlayBlurRadius, equals(2.0));
+      expect(step.scrollToTarget, equals(false));
     });
   });
 
